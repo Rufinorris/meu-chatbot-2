@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vale a pena a proposta?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#EDF0F1; --surface:#FFFFFF; --surface-2:#F6F8F8; --surface-3:#E8EDEE;
+  --line:#D7DFE1; --line-2:#E6EBEC;
+  --ink:#0F2027; --ink-2:#3E5259; --muted:#71858C;
+  --accent:#12655F; --accent-soft:#DCEDEB; --accent-line:#9FC9C3;
+  --pos:#12655F; --neg:#A61B34; --pos-soft:#DCEDEB; --neg-soft:#F8E3E6;
+  --c1:#0C4C48; --c2:#14655F; --c3:#1E7F77; --c4:#45A093; --c5:#7CC0B4;
+  --v1:#A4610F; --v2:#D08B2A;
+  --shadow:0 1px 2px rgba(15,32,39,.05), 0 8px 24px -16px rgba(15,32,39,.28);
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0C1315; --surface:#131C1F; --surface-2:#182226; --surface-3:#1E292E;
+    --line:#27353A; --line-2:#1F2B30;
+    --ink:#E8EEEF; --ink-2:#AFC1C6; --muted:#7E9298;
+    --accent:#4FB5A9; --accent-soft:#14312F; --accent-line:#2C5B57;
+    --pos:#4FB5A9; --neg:#E4788A; --pos-soft:#14312F; --neg-soft:#3A1B22;
+    --c1:#2C8B81; --c2:#3AA396; --c3:#55BBAE; --c4:#7DCFC3; --c5:#A8E0D7;
+    --v1:#D68A24; --v2:#EBB05A;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0C1315; --surface:#131C1F; --surface-2:#182226; --surface-3:#1E292E;
+  --line:#27353A; --line-2:#1F2B30;
+  --ink:#E8EEEF; --ink-2:#AFC1C6; --muted:#7E9298;
+  --accent:#4FB5A9; --accent-soft:#14312F; --accent-line:#2C5B57;
+  --pos:#4FB5A9; --neg:#E4788A; --pos-soft:#14312F; --neg-soft:#3A1B22;
+  --c1:#2C8B81; --c2:#3AA396; --c3:#55BBAE; --c4:#7DCFC3; --c5:#A8E0D7;
+  --v1:#D68A24; --v2:#EBB05A;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px; margin:0 auto; padding:28px 20px 72px}
+h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif; text-wrap:balance; margin:0}
+.num{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums}
+.eyebrow{font-size:11.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+/* ---------- masthead ---------- */
+.mast-band{max-width:1180px; margin:0 auto; padding:0 20px}
+.masthead{padding:56px 0 30px; display:flex; gap:28px; align-items:flex-end; flex-wrap:wrap; justify-content:space-between}
+.masthead h1{font-size:clamp(30px,4.4vw,46px); font-weight:800; letter-spacing:-.022em; line-height:1.04}
+.masthead p{margin:10px 0 0; color:var(--ink-2); max-width:58ch}
+.rule{height:1px; background:var(--line); margin:0}
+
+/* ---------- veredito ---------- */
+.verdict{position:sticky; top:0; z-index:40; background:var(--surface); border-bottom:1px solid var(--line); box-shadow:var(--shadow)}
+.verdict-in{max-width:1180px; margin:0 auto; padding:14px 20px; display:grid; gap:18px;
+  grid-template-columns:minmax(210px,1.1fr) repeat(3,minmax(130px,1fr)); align-items:center}
+@media (max-width:900px){
+  .verdict-in{grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 16px}
+  .verdict-in .vhead{grid-column:1 / -1}
+}
+/* em telas estreitas a barra ocuparia meia tela — deixa de ser fixa */
+@media (max-width:680px){
+  .verdict{position:static}
+  .verdict-in{padding:14px 20px 16px; gap:10px 16px}
+  .stat .v{font-size:17px}
+  .vhead .big{font-size:17px}
+}
+.pill{display:inline-flex; align-items:center; gap:8px; border-radius:999px; padding:5px 12px;
+  font-size:12.5px; font-weight:600; letter-spacing:.01em; border:1px solid transparent}
+.pill.up{background:var(--pos-soft); color:var(--pos); border-color:var(--accent-line)}
+.pill.down{background:var(--neg-soft); color:var(--neg); border-color:color-mix(in srgb,var(--neg) 35%,transparent)}
+.pill .dot{width:7px; height:7px; border-radius:50%; background:currentColor}
+.vhead{display:flex; flex-direction:column; gap:6px}
+.vhead .big{font-size:19px; font-weight:600; letter-spacing:-.01em; font-family:"Bricolage Grotesque",sans-serif}
+.stat{display:flex; flex-direction:column; gap:2px; min-width:0}
+.stat .k{font-size:11px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:600}
+.stat .v{font-size:19px; font-weight:500; letter-spacing:-.01em}
+.stat .d{font-size:12px; color:var(--ink-2)}
+.stat .d.up{color:var(--pos)} .stat .d.down{color:var(--neg)}
+
+/* ---------- cartões ---------- */
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+@media (max-width:860px){ .grid2{grid-template-columns:1fr} }
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow)}
+.card>header{padding:14px 18px; border-bottom:1px solid var(--line-2); display:flex; align-items:baseline; gap:10px; justify-content:space-between}
+.card>header h3{font-size:16px; font-weight:600; letter-spacing:-.01em}
+.card>header .tag{font-size:11px; letter-spacing:.09em; text-transform:uppercase; font-weight:600; color:var(--muted)}
+.card .body{padding:6px 18px 18px}
+.scn-atual>header{border-top:3px solid var(--muted); border-radius:var(--r) var(--r) 0 0}
+.scn-prop>header{border-top:3px solid var(--accent); border-radius:var(--r) var(--r) 0 0}
+
+/* ---------- campos ---------- */
+.field{display:grid; grid-template-columns:1fr 132px; gap:10px; align-items:center; padding:9px 0; border-bottom:1px solid var(--line-2)}
+.field:last-child{border-bottom:0}
+.field.wide{grid-template-columns:1fr 186px}
+@media (max-width:520px){ .field, .field.wide{grid-template-columns:1fr; gap:6px} }
+.field label{font-size:13.5px; color:var(--ink-2); line-height:1.35}
+.field label .hint{display:block; font-size:11.5px; color:var(--muted)}
+.inp{display:flex; align-items:center; gap:0; border:1px solid var(--line); border-radius:7px; background:var(--surface-2); overflow:hidden}
+.inp:focus-within{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+.inp .pre,.inp .suf{font-size:11.5px; color:var(--muted); padding:0 8px; flex:none; font-weight:500}
+.inp input{border:0; background:transparent; color:var(--ink); width:100%; min-width:0; padding:7px 2px; text-align:right;
+  font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:13.5px; outline:none}
+.inp input::-webkit-outer-spin-button,.inp input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+select{border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:7px;
+  padding:7px 8px; font:inherit; font-size:13px; width:100%}
+select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+.sub{font-size:11.5px; color:var(--muted); padding:2px 0 10px; text-align:right}
+.sub b{color:var(--ink-2); font-weight:500}
+
+.group-t{display:flex; align-items:center; gap:10px; padding:16px 0 4px}
+.group-t span{font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:600; white-space:nowrap}
+.group-t:after{content:""; height:1px; background:var(--line-2); flex:1}
+
+.ben-row{display:grid; grid-template-columns:1fr 118px 28px; gap:8px; align-items:center; padding:4px 0}
+.ben-row input.lbl{border:1px solid transparent; background:transparent; color:var(--ink-2); font:inherit; font-size:13px;
+  padding:6px 6px; border-radius:6px; width:100%; min-width:0}
+.ben-row input.lbl:hover{background:var(--surface-2)}
+.ben-row input.lbl:focus{outline:none; background:var(--surface-2); border-color:var(--accent)}
+.iconbtn{border:1px solid transparent; background:transparent; color:var(--muted); border-radius:6px; cursor:pointer;
+  width:28px; height:28px; font-size:16px; line-height:1; display:grid; place-items:center; padding:0}
+.iconbtn:hover{background:var(--neg-soft); color:var(--neg)}
+.iconbtn:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+.addbtn{margin-top:8px; border:1px dashed var(--line); background:transparent; color:var(--ink-2); border-radius:7px;
+  padding:7px 12px; font:inherit; font-size:12.5px; cursor:pointer; width:100%}
+.addbtn:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
+.addbtn:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+.tot{display:flex; justify-content:space-between; align-items:baseline; padding:10px 0 0; margin-top:8px; border-top:1px solid var(--line-2); font-size:13px}
+.tot b{font-weight:600; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+
+/* ---------- seções ---------- */
+section{margin-top:36px}
+.sec-head{display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:14px}
+.sec-head h2{font-size:20px; font-weight:600; letter-spacing:-.015em}
+.sec-head p{margin:4px 0 0; font-size:13.5px; color:var(--ink-2); max-width:70ch}
+
+/* ---------- gráfico composição ---------- */
+.comp{padding:20px 18px}
+.bar-row{margin-bottom:20px}
+.bar-row:last-child{margin-bottom:0}
+.bar-lab{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:7px; gap:12px}
+.bar-lab .n{font-size:13px; font-weight:600; color:var(--ink)}
+.bar-lab .t{font-size:13px; color:var(--ink-2)}
+.stack{display:flex; height:30px; border-radius:5px; overflow:hidden; background:var(--surface-3); gap:2px}
+.seg{height:100%; cursor:default; transition:filter .12s ease}
+.seg:hover{filter:brightness(1.12)}
+.seg:first-child{border-radius:5px 0 0 5px} .seg:last-child{border-radius:0 5px 5px 0}
+.legend{display:flex; flex-wrap:wrap; gap:8px 18px; margin-top:18px; padding-top:14px; border-top:1px solid var(--line-2)}
+.lg{display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--ink-2)}
+.lg i{width:11px; height:11px; border-radius:3px; flex:none; display:block}
+.risknote{margin-top:14px; font-size:13px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line-2);
+  border-radius:8px; padding:11px 13px}
+.risknote b{color:var(--ink); font-weight:600}
+
+/* ---------- gráfico deltas ---------- */
+.delta{padding:20px 18px}
+.drow{display:grid; grid-template-columns:minmax(120px,1.1fr) minmax(140px,3fr) 116px; gap:12px; align-items:center; padding:5px 0}
+.drow .dl{font-size:13px; color:var(--ink-2)}
+.dtrack{position:relative; height:20px}
+.dtrack:before{content:""; position:absolute; left:var(--zero,50%); top:-3px; bottom:-3px; width:1px; background:var(--line)}
+.dbar{position:absolute; top:2px; height:16px; border-radius:3px}
+.drow .dv{font-size:13px; text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.dv.up{color:var(--pos)} .dv.down{color:var(--neg)} .dv.zero{color:var(--muted)}
+@media (max-width:680px){
+  .drow{grid-template-columns:minmax(0,1fr) 104px; gap:6px 10px; padding:8px 0}
+  .drow .dtrack{grid-column:1 / -1; order:3; height:14px}
+  .dbar{height:12px}
+}
+.drow.total{border-top:1px solid var(--line); margin-top:8px; padding-top:12px}
+.drow.total .dl{color:var(--ink); font-weight:600}
+.drow.total .dv{font-weight:600}
+
+/* ---------- tabelas ---------- */
+.tblwrap{overflow-x:auto; border:1px solid var(--line); border-radius:var(--r); background:var(--surface); box-shadow:var(--shadow)}
+table{border-collapse:collapse; width:100%; min-width:560px; font-size:13.5px}
+th,td{text-align:right; padding:10px 16px; border-bottom:1px solid var(--line-2); white-space:nowrap}
+th:first-child,td:first-child{text-align:left; white-space:normal}
+thead th{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600; background:var(--surface-2)}
+tbody td:not(:first-child){font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+tr.sum td{border-top:1px solid var(--line); font-weight:600; background:var(--surface-2)}
+tr.sub td:first-child{padding-left:30px; color:var(--ink-2)}
+td.up{color:var(--pos)} td.down{color:var(--neg)}
+tbody tr:last-child td{border-bottom:0}
+.chip{display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:8px; vertical-align:baseline}
+
+/* ---------- parâmetros ---------- */
+details.params{margin-top:36px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow)}
+details.params>summary{cursor:pointer; padding:15px 18px; font-weight:600; font-size:15px; list-style:none;
+  display:flex; align-items:center; gap:10px; font-family:"Bricolage Grotesque",sans-serif}
+details.params>summary::-webkit-details-marker{display:none}
+details.params>summary:before{content:"+"; font-family:"IBM Plex Mono",monospace; color:var(--accent); font-size:15px; width:14px}
+details.params[open]>summary:before{content:"−"}
+details.params>summary:focus-visible{outline:2px solid var(--accent); outline-offset:-2px; border-radius:var(--r)}
+.params-body{padding:4px 18px 20px; border-top:1px solid var(--line-2)}
+.pgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(258px,1fr)); gap:26px; margin-top:16px}
+.taxrow{display:grid; gap:8px; align-items:center; padding:3px 0}
+.taxrow.i3{grid-template-columns:1fr 78px 84px}
+.taxrow.i2{grid-template-columns:1fr 84px}
+.taxrow .cap{font-size:11px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:600}
+.chk{display:flex; gap:10px; align-items:flex-start; padding:8px 0; font-size:13.5px; color:var(--ink-2)}
+.chk input{margin-top:3px; accent-color:var(--accent); width:15px; height:15px; flex:none}
+.chk .hint{display:block; font-size:11.5px; color:var(--muted)}
+
+/* ---------- ações / rodapé ---------- */
+.actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:18px}
+.btn{border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:8px; padding:9px 15px;
+  font:inherit; font-size:13.5px; cursor:pointer; box-shadow:var(--shadow)}
+.btn:hover{border-color:var(--accent); color:var(--accent)}
+.btn:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--surface)}
+.btn.primary:hover{filter:brightness(1.08); color:var(--surface)}
+.toast{font-size:12.5px; color:var(--accent); opacity:0; transition:opacity .2s}
+.toast.on{opacity:1}
+.notes{margin-top:40px; padding-top:22px; border-top:1px solid var(--line); color:var(--muted); font-size:12.5px}
+.notes h4{margin:0 0 8px; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-2); font-family:"IBM Plex Sans",sans-serif}
+.notes ul{margin:0; padding-left:18px; display:grid; gap:5px; max-width:88ch}
+.notes b{color:var(--ink-2); font-weight:600}
+
+#tip{position:fixed; z-index:80; pointer-events:none; opacity:0; transition:opacity .12s;
+  background:var(--ink); color:var(--ground); font-size:12px; padding:6px 9px; border-radius:6px; box-shadow:var(--shadow);
+  font-family:"IBM Plex Mono",monospace; white-space:nowrap}
+#tip.on{opacity:1}
+@media (prefers-reduced-motion: reduce){*{transition:none!important; animation:none!important}}
+</style>
+</head>
+<body>
+
+<div id="tip" role="status" aria-live="polite"></div>
+
+<div class="mast-band">
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">Simulador de remuneração · CLT</p>
+      <h1>Vale a pena a proposta?</h1>
+      <p>Compare o pacote inteiro, não só o salário: benefícios, bônus, ILP, previdência e FGTS — com INSS e IRRF descontados mês a mês, no 13º e sobre a parcela variável.</p>
+    </div>
+  </header>
+</div>
+
+<div class="verdict" id="verdict">
+  <div class="verdict-in">
+    <div class="vhead">
+      <span class="pill up" id="v-pill"><span class="dot"></span><span id="v-pill-txt">—</span></span>
+      <span class="big" id="v-title">Preencha os dois cenários</span>
+    </div>
+    <div class="stat">
+      <span class="k">Remuneração total /ano</span>
+      <span class="v num" id="v-tc">—</span>
+      <span class="d" id="v-tc-d">—</span>
+    </div>
+    <div class="stat">
+      <span class="k">Líquido no bolso /ano</span>
+      <span class="v num" id="v-liq">—</span>
+      <span class="d" id="v-liq-d">—</span>
+    </div>
+    <div class="stat">
+      <span class="k">Valor percebido /ano</span>
+      <span class="v num" id="v-val">—</span>
+      <span class="d" id="v-val-d">—</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="grid2" id="cenarios"></div>
+
+  <div class="actions">
+    <button class="btn" id="btn-copiar">Copiar resumo</button>
+    <button class="btn" id="btn-espelhar" title="Copia os valores do cenário atual para a proposta">Espelhar Atual → Proposta</button>
+    <button class="btn" id="btn-reset">Restaurar exemplo</button>
+    <span class="toast" id="toast"></span>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>Composição do pacote</h2>
+        <p>Os tons de verde são o que você recebe independentemente de desempenho. Os tons de âmbar dependem de metas, de você continuar na empresa e — no ILP — do preço da ação.</p>
+      </div>
+    </div>
+    <div class="card comp" id="comp"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>De onde vem a diferença</h2>
+        <p>Variação da proposta em relação ao cenário atual, componente a componente, em valores brutos anuais.</p>
+      </div>
+    </div>
+    <div class="card delta" id="delta"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>Detalhamento anual</h2>
+        <p>Tudo em base anual. Benefícios e previdência da empresa não são tributados no seu contracheque, mas valem dinheiro.</p>
+      </div>
+    </div>
+    <div class="tblwrap"><table id="tbl-comp"></table></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>Do bruto ao líquido</h2>
+        <p>Quanto some em INSS, IRRF e aportes seus antes do dinheiro cair na conta.</p>
+      </div>
+    </div>
+    <div class="tblwrap"><table id="tbl-liq"></table></div>
+  </section>
+
+  <details class="params" id="params">
+    <summary>Parâmetros fiscais e premissas</summary>
+    <div class="params-body">
+      <p style="font-size:13px;color:var(--ink-2);margin:14px 0 0;max-width:74ch">
+        Os valores abaixo vêm das tabelas vigentes em 2025/2026 e são editáveis — confirme com o seu RH ou contador antes de decidir. Alterar qualquer campo recalcula tudo.
+      </p>
+      <div class="pgrid">
+        <div>
+          <div class="group-t"><span>Tabela INSS mensal</span></div>
+          <div class="taxrow i2"><span class="cap">Faixa até (R$)</span><span class="cap" style="text-align:right">Alíquota</span></div>
+          <div id="inss-rows"></div>
+        </div>
+        <div>
+          <div class="group-t"><span>Tabela IRRF mensal</span></div>
+          <div class="taxrow i3"><span class="cap">Base até (R$)</span><span class="cap" style="text-align:right">Alíq.</span><span class="cap" style="text-align:right">Dedução</span></div>
+          <div id="irrf-rows"></div>
+        </div>
+        <div>
+          <div class="group-t"><span>Deduções e regras</span></div>
+          <div class="field"><label>Dependentes<span class="hint">R$ 189,59 por dependente/mês</span></label><div class="inp"><input id="cfg-dep" inputmode="decimal"><span class="suf">un</span></div></div>
+          <div class="field"><label>Desconto simplificado mensal</label><div class="inp"><span class="pre">R$</span><input id="cfg-simpl" inputmode="decimal"></div></div>
+          <label class="chk"><input type="checkbox" id="cfg-simpl-on"><span>Usar o desconto simplificado quando for mais vantajoso<span class="hint">O sistema compara com INSS + previdência + dependentes e aplica o maior.</span></span></label>
+          <label class="chk"><input type="checkbox" id="cfg-13"><span>Incluir 13º salário e 1/3 de férias<span class="hint">O 13º é tributado em separado; o terço entra no mês das férias.</span></span></label>
+          <label class="chk"><input type="checkbox" id="cfg-fgts"><span>Contar FGTS (8%) na remuneração total<span class="hint">Depositado pela empresa sobre salário e 13º. Não é caixa imediato.</span></span></label>
+        </div>
+        <div>
+          <div class="group-t"><span>Redutor do IRRF (Lei 15.270/2025)</span></div>
+          <label class="chk"><input type="checkbox" id="cfg-red-on"><span>Aplicar o redutor da isenção até R$ 5.000<span class="hint">Zera o IRRF até o teto de isenção e reduz parcialmente até o limite abaixo.</span></span></label>
+          <div class="field"><label>Isenção integral até</label><div class="inp"><span class="pre">R$</span><input id="cfg-red-isen" inputmode="decimal"></div></div>
+          <div class="field"><label>Redução parcial até</label><div class="inp"><span class="pre">R$</span><input id="cfg-red-teto" inputmode="decimal"></div></div>
+          <div class="field"><label>Redutor = a − b × rendimento<span class="hint">Coeficiente a</span></label><div class="inp"><input id="cfg-red-a" inputmode="decimal"></div></div>
+          <div class="field"><label style="color:var(--muted)">Coeficiente b</label><div class="inp"><input id="cfg-red-b" inputmode="decimal"></div></div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="notes">
+    <h4>Como as contas são feitas</h4>
+    <ul>
+      <li><b>Remuneração total (total comp):</b> salário × 12 + 13º + 1/3 de férias + bônus + ILP anualizado + aporte da empresa na previdência + benefícios + FGTS. É o valor cheio do pacote, antes de impostos.</li>
+      <li><b>Líquido no bolso:</b> o que cai na conta no ano — salários, 13º, férias, bônus e ILP já com INSS, IRRF, seu aporte de previdência e descontos mensais subtraídos.</li>
+      <li><b>Valor percebido:</b> o líquido no bolso mais o que você recebe sem passar pelo contracheque — benefícios, aporte da empresa na previdência e FGTS. É o número que melhor compara duas propostas.</li>
+      <li><b>Bônus e ILP</b> são somados ao mês do pagamento e tributados na margem: se o salário já passou do teto do INSS, só há IRRF sobre eles. O ILP pode ser tratado como rendimento do trabalho ou como ganho de capital a 15%, conforme o desenho do plano — confirme no regulamento.</li>
+      <li><b>Previdência privada:</b> o seu aporte reduz a base do IRRF até 12% do rendimento bruto (regra do PGBL); planos VGBL não deduzem — nesse caso deixe o aporte em 0 e trate-o como poupança.</li>
+      <li><b>O que o simulador não decide por você:</b> estabilidade da empresa, senioridade do cargo, gestor, aprendizado, jornada, plano de carreira e o custo de recomeçar. O ILP só vira dinheiro se você ficar até o vesting.</li>
+      <li>Estimativa para orientar a decisão — não é aconselhamento fiscal, contábil ou jurídico.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ utilitários ============ */
+const $ = (s, r) => (r||document).querySelector(s);
+const BRL = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const BRL2 = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
+const PCT = new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
+const money = v => BRL.format(Math.round(v||0));
+const money2 = v => BRL2.format(v||0);
+const signed = v => (v>0?'+':v<0?'−':'') + BRL.format(Math.abs(Math.round(v||0)));
+
+function num(v){
+  if(typeof v === 'number') return isFinite(v)?v:0;
+  if(v==null) return 0;
+  let s = String(v).trim().replace(/[R$\s%]/g,'').replace(/−/g,'-');
+  if(!s) return 0;
+  if(s.indexOf(',')>-1) s = s.replace(/\./g,'').replace(',','.');
+  else if(/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g,'');
+  const n = parseFloat(s);
+  return isFinite(n) ? n : 0;
+}
+const fmtIn = v => (Math.round(v*100)/100).toLocaleString('pt-BR',{maximumFractionDigits:2});
+
+/* ============ parâmetros fiscais (editáveis) ============ */
+const CFG = {
+  inss: [
+    {limite:1518.00, aliq:0.075},
+    {limite:2793.88, aliq:0.09},
+    {limite:4190.83, aliq:0.12},
+    {limite:8157.41, aliq:0.14}
+  ],
+  irrf: [
+    {limite:2428.80, aliq:0,     ded:0},
+    {limite:2826.65, aliq:0.075, ded:182.16},
+    {limite:3751.05, aliq:0.15,  ded:394.16},
+    {limite:4664.68, aliq:0.225, ded:675.49},
+    {limite:Infinity,aliq:0.275, ded:908.73}
+  ],
+  simplificado:607.20, simplOn:true,
+  dependentes:0, valorDep:189.59,
+  decimo:true, fgts:true,
+  redOn:true, redIsen:5000, redTeto:7350, redA:978.62, redB:0.133145
+};
+
+const inss = base => {
+  let prev = 0, t = 0;
+  for(const f of CFG.inss){
+    if(base <= prev) break;
+    t += (Math.min(base, f.limite) - prev) * f.aliq;
+    prev = f.limite;
+  }
+  return t;
+};
+
+function irrf(rendimento, deducoes){
+  const abat = CFG.simplOn ? Math.max(deducoes, CFG.simplificado) : deducoes;
+  const base = Math.max(0, rendimento - abat);
+  let imp = 0;
+  for(const f of CFG.irrf){ if(base <= f.limite){ imp = base*f.aliq - f.ded; break; } }
+  imp = Math.max(0, imp);
+  if(CFG.redOn && rendimento <= CFG.redTeto){
+    if(rendimento <= CFG.redIsen) imp = 0;
+    else imp = Math.max(0, imp - Math.max(0, CFG.redA - CFG.redB*rendimento));
+  }
+  return imp;
+}
+
+/* ============ componentes do pacote ============ */
+const COMPS = [
+  {k:'salario', n:'Salário (12×)',           cor:'--c1', risco:false},
+  {k:'decimo',  n:'13º + 1/3 de férias',     cor:'--c2', risco:false},
+  {k:'fgts',    n:'FGTS (8%)',               cor:'--c3', risco:false},
+  {k:'benef',   n:'Benefícios',              cor:'--c4', risco:false},
+  {k:'prev',    n:'Previdência (empresa)',   cor:'--c5', risco:false},
+  {k:'bonus',   n:'Bônus anual',             cor:'--v1', risco:true},
+  {k:'ilp',     n:'ILP anualizado',          cor:'--v2', risco:true}
+];
+
+/* ============ o cálculo ============ */
+function calcular(s){
+  const sal = Math.max(0, s.salario);
+  const prevFuncM = sal * s.prevFunc/100;
+  const prevEmpM  = sal * s.prevEmp/100;
+  const dedDep = CFG.dependentes * CFG.valorDep;
+  const benefM = s.beneficios.reduce((a,b)=>a+b.v, 0);
+
+  // deduções legais do mês: INSS + previdência do funcionário (teto 12% do bruto) + dependentes
+  const ded = (rend, inssV) => inssV + Math.min(prevFuncM, 0.12*rend) + dedDep;
+  const irMes = rend => { const i = inss(rend); return {inss:i, ir:irrf(rend, ded(rend, i))}; };
+
+  // mês regular
+  const reg = irMes(sal);
+  const mesesReg = CFG.decimo ? 11 : 12;
+
+  // mês de férias: salário + 1/3
+  const terco = CFG.decimo ? sal/3 : 0;
+  const fer = CFG.decimo ? irMes(sal + terco) : {inss:0, ir:0};
+
+  // 13º salário, tributado em separado
+  const dec = CFG.decimo ? irMes(sal) : {inss:0, ir:0};
+  const decBruto = CFG.decimo ? sal : 0;
+
+  // parcela variável, tributada na margem sobre um mês regular
+  const bonusBruto = sal * 12 * (s.bonusPct/100) * (s.bonusAting/100);
+  const ilpBruto = s.ilpAnos > 0 ? s.ilpGrant / s.ilpAnos : 0;
+
+  function marginal(extra){
+    if(extra <= 0) return {inss:0, ir:0};
+    const i2 = inss(sal + extra);
+    const t2 = irrf(sal + extra, ded(sal + extra, i2));
+    return {inss: i2 - reg.inss, ir: t2 - reg.ir};
+  }
+  const mB = marginal(bonusBruto);
+  const mI = s.ilpTrib === 'cap' ? {inss:0, ir: ilpBruto*0.15} : marginal(ilpBruto);
+
+  // totais brutos
+  const g = {
+    salario: sal*12,
+    decimo:  decBruto + terco,
+    fgts:    CFG.fgts ? 0.08*(sal*12 + decBruto) : 0,
+    benef:   benefM*12,
+    prev:    prevEmpM*12,
+    bonus:   bonusBruto,
+    ilp:     ilpBruto
+  };
+  const brutoFolha = g.salario + g.decimo + g.bonus + g.ilp;
+  const totalComp = COMPS.reduce((a,c)=>a+g[c.k], 0);
+  const variavel = g.bonus + g.ilp;
+
+  // descontos
+  const inssTot = reg.inss*mesesReg + fer.inss + dec.inss + mB.inss + mI.inss;
+  const irTot   = reg.ir*mesesReg   + fer.ir   + dec.ir   + mB.ir   + mI.ir;
+  const prevTot = prevFuncM*12;
+  const descTot = s.descontos*12;
+
+  const liquido = brutoFolha - inssTot - irTot - prevTot - descTot;
+  const percebido = liquido + g.benef + g.prev + g.fgts;
+
+  return {
+    g, totalComp, brutoFolha, variavel,
+    pctVariavel: totalComp>0 ? variavel/totalComp*100 : 0,
+    inss:inssTot, ir:irTot, prevFunc:prevTot, desc:descTot,
+    liquido, percebido,
+    aliqEfetiva: brutoFolha>0 ? (inssTot+irTot)/brutoFolha*100 : 0,
+    benefM, prevEmpM, prevFuncM, bonusBruto, ilpBruto,
+    liquidoMes: liquido/12, percebidoMes: percebido/12
+  };
+}
+
+/* ============ cenários: sementes ============ */
+const SEED = {
+  a:{ salario:18000, bonusPct:15, bonusAting:100, ilpGrant:0, ilpAnos:4, ilpTrib:'salario',
+      prevEmp:5, prevFunc:5, descontos:180,
+      beneficios:[
+        {l:'Vale refeição / alimentação', v:1200},
+        {l:'Plano de saúde (prêmio pago pela empresa)', v:900},
+        {l:'Plano odontológico', v:90},
+        {l:'Auxílio home office', v:200}
+      ]},
+  p:{ salario:22000, bonusPct:20, bonusAting:100, ilpGrant:120000, ilpAnos:4, ilpTrib:'salario',
+      prevEmp:6, prevFunc:6, descontos:220,
+      beneficios:[
+        {l:'Vale refeição / alimentação', v:1500},
+        {l:'Plano de saúde (prêmio pago pela empresa)', v:1400},
+        {l:'Plano odontológico', v:120},
+        {l:'Auxílio home office', v:250},
+        {l:'Verba de educação / idiomas', v:300}
+      ]}
+};
+
+/* ============ montagem dos cartões ============ */
+function cardHTML(p, titulo, tag, cls){
+  return '<article class="card '+cls+'">'
+  + '<header><h3>'+titulo+'</h3><span class="tag">'+tag+'</span></header>'
+  + '<div class="body">'
+  + '<div class="group-t"><span>Salário</span></div>'
+  + '<div class="field"><label>Salário mensal bruto</label><div class="inp"><span class="pre">R$</span><input id="'+p+'-salario" inputmode="decimal" data-money></div></div>'
+  + '<div class="sub" id="'+p+'-sub-sal"></div>'
+
+  + '<div class="group-t"><span>Bônus anual</span></div>'
+  + '<div class="field"><label>Bônus alvo<span class="hint">% do salário anual (12 meses)</span></label><div class="inp"><input id="'+p+'-bonusPct" inputmode="decimal"><span class="suf">%</span></div></div>'
+  + '<div class="field"><label>Atingimento esperado<span class="hint">quanto do alvo você espera de fato receber</span></label><div class="inp"><input id="'+p+'-bonusAting" inputmode="decimal"><span class="suf">%</span></div></div>'
+  + '<div class="sub" id="'+p+'-sub-bonus"></div>'
+
+  + '<div class="group-t"><span>ILP — incentivo de longo prazo</span></div>'
+  + '<div class="field"><label>Valor total concedido<span class="hint">ações, RSU, phantom shares, bônus plurianual</span></label><div class="inp"><span class="pre">R$</span><input id="'+p+'-ilpGrant" inputmode="decimal" data-money></div></div>'
+  + '<div class="field"><label>Prazo de vesting</label><div class="inp"><input id="'+p+'-ilpAnos" inputmode="decimal"><span class="suf">anos</span></div></div>'
+  + '<div class="field wide"><label>Tributação do ILP</label><select id="'+p+'-ilpTrib"><option value="salario">Rendimento do trabalho</option><option value="cap">Ganho de capital (15%)</option></select></div>'
+  + '<div class="sub" id="'+p+'-sub-ilp"></div>'
+
+  + '<div class="group-t"><span>Previdência privada</span></div>'
+  + '<div class="field"><label>Aporte da empresa</label><div class="inp"><input id="'+p+'-prevEmp" inputmode="decimal"><span class="suf">% sal.</span></div></div>'
+  + '<div class="field"><label>Seu aporte<span class="hint">deduz a base do IRRF até 12% do bruto (PGBL)</span></label><div class="inp"><input id="'+p+'-prevFunc" inputmode="decimal"><span class="suf">% sal.</span></div></div>'
+  + '<div class="sub" id="'+p+'-sub-prev"></div>'
+
+  + '<div class="group-t"><span>Benefícios mensais</span></div>'
+  + '<div id="'+p+'-ben"></div>'
+  + '<button class="addbtn" data-add="'+p+'">+ adicionar benefício</button>'
+  + '<div class="field" style="margin-top:6px"><label>Descontos mensais<span class="hint">coparticipação, vale-transporte, mensalidade do plano</span></label><div class="inp"><span class="pre">−R$</span><input id="'+p+'-descontos" inputmode="decimal" data-money></div></div>'
+  + '<div class="tot"><span>Benefícios menos descontos, por mês</span><b id="'+p+'-ben-tot">—</b></div>'
+  + '</div></article>';
+}
+
+$('#cenarios').innerHTML = cardHTML('a','Situação atual','Hoje','scn-atual') + cardHTML('p','Proposta recebida','Oferta','scn-prop');
+
+function benRow(p, l, v){
+  const row = document.createElement('div');
+  row.className = 'ben-row';
+  row.innerHTML = '<input class="lbl" value="" aria-label="Nome do benefício">'
+    + '<div class="inp"><span class="pre">R$</span><input class="val" inputmode="decimal" data-money aria-label="Valor mensal"></div>'
+    + '<button class="iconbtn" type="button" title="Remover" aria-label="Remover benefício">×</button>';
+  $('.lbl', row).value = l;
+  $('.val', row).value = fmtIn(v);
+  $('.iconbtn', row).addEventListener('click', () => { row.remove(); atualizar(); });
+  $('#'+p+'-ben').appendChild(row);
+  return row;
+}
+
+/* ============ tabelas fiscais editáveis ============ */
+function montarTabelas(){
+  const iw = $('#inss-rows'); iw.innerHTML = '';
+  CFG.inss.forEach((f,i)=>{
+    const d = document.createElement('div'); d.className='taxrow i2';
+    d.innerHTML = '<div class="inp"><span class="pre">até</span><input data-tax="inss.'+i+'.limite" inputmode="decimal"></div>'
+                + '<div class="inp"><input data-tax="inss.'+i+'.aliq" inputmode="decimal"><span class="suf">%</span></div>';
+    iw.appendChild(d);
+    $('[data-tax$=".limite"]', d).value = fmtIn(f.limite);
+    $('[data-tax$=".aliq"]', d).value = fmtIn(f.aliq*100);
+  });
+  const rw = $('#irrf-rows'); rw.innerHTML = '';
+  CFG.irrf.forEach((f,i)=>{
+    const ult = i === CFG.irrf.length-1;
+    const d = document.createElement('div'); d.className='taxrow i3';
+    d.innerHTML = '<div class="inp"><span class="pre">até</span><input data-tax="irrf.'+i+'.limite" inputmode="decimal" '+(ult?'disabled value="acima"':'')+'></div>'
+                + '<div class="inp"><input data-tax="irrf.'+i+'.aliq" inputmode="decimal"><span class="suf">%</span></div>'
+                + '<div class="inp"><span class="pre">R$</span><input data-tax="irrf.'+i+'.ded" inputmode="decimal"></div>';
+    rw.appendChild(d);
+    if(!ult) $('[data-tax$=".limite"]', d).value = fmtIn(f.limite);
+    $('[data-tax$=".aliq"]', d).value = fmtIn(f.aliq*100);
+    $('[data-tax$=".ded"]', d).value = fmtIn(f.ded);
+  });
+  $('#cfg-dep').value = fmtIn(CFG.dependentes);
+  $('#cfg-simpl').value = fmtIn(CFG.simplificado);
+  $('#cfg-simpl-on').checked = CFG.simplOn;
+  $('#cfg-13').checked = CFG.decimo;
+  $('#cfg-fgts').checked = CFG.fgts;
+  $('#cfg-red-on').checked = CFG.redOn;
+  $('#cfg-red-isen').value = fmtIn(CFG.redIsen);
+  $('#cfg-red-teto').value = fmtIn(CFG.redTeto);
+  $('#cfg-red-a').value = fmtIn(CFG.redA);
+  $('#cfg-red-b').value = String(CFG.redB).replace('.',',');
+}
+
+function lerCFG(){
+  document.querySelectorAll('[data-tax]').forEach(el=>{
+    if(el.disabled) return;
+    const [t,i,campo] = el.dataset.tax.split('.');
+    const v = num(el.value);
+    CFG[t][+i][campo] = (campo === 'aliq') ? v/100 : v;
+  });
+  CFG.dependentes  = Math.max(0, num($('#cfg-dep').value));
+  CFG.simplificado = num($('#cfg-simpl').value);
+  CFG.simplOn = $('#cfg-simpl-on').checked;
+  CFG.decimo  = $('#cfg-13').checked;
+  CFG.fgts    = $('#cfg-fgts').checked;
+  CFG.redOn   = $('#cfg-red-on').checked;
+  CFG.redIsen = num($('#cfg-red-isen').value);
+  CFG.redTeto = num($('#cfg-red-teto').value);
+  CFG.redA    = num($('#cfg-red-a').value);
+  CFG.redB    = num($('#cfg-red-b').value);
+}
+
+/* ============ leitura e escrita dos cenários ============ */
+const CAMPOS = ['salario','bonusPct','bonusAting','ilpGrant','ilpAnos','prevEmp','prevFunc','descontos'];
+
+function lerCenario(p){
+  const s = {};
+  CAMPOS.forEach(k => s[k] = num($('#'+p+'-'+k).value));
+  s.ilpTrib = $('#'+p+'-ilpTrib').value;
+  s.beneficios = Array.from(document.querySelectorAll('#'+p+'-ben .ben-row')).map(r => ({
+    l: $('.lbl', r).value, v: num($('.val', r).value)
+  }));
+  return s;
+}
+
+function escreverCenario(p, s){
+  CAMPOS.forEach(k => $('#'+p+'-'+k).value = fmtIn(s[k]||0));
+  $('#'+p+'-ilpTrib').value = s.ilpTrib || 'salario';
+  $('#'+p+'-ben').innerHTML = '';
+  (s.beneficios||[]).forEach(b => benRow(p, b.l, b.v));
+}
+
+/* ============ tooltip ============ */
+const tip = $('#tip');
+function tipOn(e, txt){
+  tip.textContent = txt; tip.classList.add('on');
+  const r = tip.getBoundingClientRect();
+  let x = e.clientX + 12, y = e.clientY - r.height - 10;
+  if(x + r.width > window.innerWidth - 8) x = window.innerWidth - r.width - 8;
+  if(y < 8) y = e.clientY + 16;
+  tip.style.left = x+'px'; tip.style.top = y+'px';
+}
+function tipOff(){ tip.classList.remove('on'); }
+
+/* ============ render: composição ============ */
+function renderComp(A, P){
+  const max = Math.max(A.totalComp, P.totalComp, 1);
+  const linha = (r, nome, tag) => {
+    let segs = '';
+    COMPS.forEach(c => {
+      const v = r.g[c.k];
+      if(v <= 0) return;
+      const w = v/max*100;
+      segs += '<div class="seg" style="width:'+w.toFixed(3)+'%;background:var('+c.cor+')" '
+            + 'data-t="'+c.n+': '+money(v)+' · '+PCT.format(r.totalComp>0?v/r.totalComp*100:0)+'% do pacote"></div>';
+    });
+    const vazio = 100 - r.totalComp/max*100;
+    if(vazio > 0.2) segs += '<div style="width:'+vazio.toFixed(3)+'%"></div>';
+    return '<div class="bar-row"><div class="bar-lab"><span class="n">'+nome+'</span>'
+         + '<span class="t num">'+money(r.totalComp)+' <span style="color:var(--muted)">/ano</span></span></div>'
+         + '<div class="stack">'+segs+'</div></div>';
+  };
+  let legenda = '<div class="legend">';
+  COMPS.forEach(c => legenda += '<span class="lg"><i style="background:var('+c.cor+')"></i>'+c.n+'</span>');
+  legenda += '</div>';
+
+  const dv = P.pctVariavel - A.pctVariavel;
+  const nota = '<div class="risknote">Na proposta, <b>'+PCT.format(P.pctVariavel)+'%</b> do pacote é parcela variável '
+    + '(bônus + ILP), contra <b>'+PCT.format(A.pctVariavel)+'%</b> hoje — '
+    + (Math.abs(dv) < 0.5 ? 'praticamente a mesma exposição a risco.'
+       : dv > 0 ? 'ou seja, <b>'+money(P.variavel - A.variavel)+' a mais por ano</b> que dependem de meta batida, permanência e, no caso do ILP, do valor da ação na data do vesting.'
+                : 'ou seja, uma parte maior da remuneração passa a ser garantida.')
+    + '</div>';
+
+  $('#comp').innerHTML = linha(A,'Situação atual') + linha(P,'Proposta recebida') + legenda + nota;
+  $('#comp').querySelectorAll('.seg').forEach(el=>{
+    el.addEventListener('mousemove', e => tipOn(e, el.dataset.t));
+    el.addEventListener('mouseleave', tipOff);
+  });
+}
+
+/* ============ render: deltas ============ */
+function renderDelta(A, P, breakEven, salProp){
+  const linhas = COMPS.map(c => ({n:c.n, cor:c.cor, d:P.g[c.k]-A.g[c.k]}));
+  const total = P.totalComp - A.totalComp;
+  const max = Math.max(1, ...linhas.map(l=>Math.abs(l.d)), Math.abs(total));
+  // o eixo zero só fica no meio quando há variações nos dois sentidos
+  const temNeg = linhas.some(l=>l.d < 0) || total < 0;
+  const temPos = linhas.some(l=>l.d > 0) || total > 0;
+  const zero = (temNeg && temPos) ? 50 : temNeg ? 100 : 0;
+  const span = (temNeg && temPos) ? 50 : 100;
+  const barra = d => {
+    const w = Math.abs(d)/max*span;
+    const cor = d >= 0 ? 'var(--pos)' : 'var(--neg)';
+    const est = d >= 0 ? 'left:'+zero+'%;width:'+w.toFixed(3)+'%'
+                       : 'right:'+(100-zero)+'%;width:'+w.toFixed(3)+'%';
+    return '<div class="dtrack" style="--zero:'+zero+'%"><div class="dbar" style="'+est+';background:'+cor+'"></div></div>';
+  };
+  const cls = d => d > 0 ? 'up' : d < 0 ? 'down' : 'zero';
+  let html = '';
+  linhas.forEach(l => {
+    html += '<div class="drow"><span class="dl"><span class="chip" style="background:var('+l.cor+')"></span>'+l.n+'</span>'
+          + barra(l.d) + '<span class="dv '+cls(l.d)+'">'+(l.d===0?'—':signed(l.d))+'</span></div>';
+  });
+  html += '<div class="drow total"><span class="dl">Remuneração total</span>' + barra(total)
+        + '<span class="dv '+cls(total)+'">'+signed(total)+'</span></div>';
+
+  const dif = breakEven - salProp;
+  html += '<div class="risknote">Para que o <b>valor percebido no ano</b> ficasse igual ao de hoje, o salário da proposta '
+       + 'precisaria ser de <b>'+money2(breakEven)+'</b> por mês, mantidos os demais itens da oferta. '
+       + (dif <= 0
+          ? 'A oferta está <b>'+money2(-dif)+'</b> acima desse ponto de equilíbrio.'
+          : 'Faltam <b>'+money2(dif)+'</b> por mês para chegar lá.')
+       + '</div>';
+  $('#delta').innerHTML = html;
+}
+
+/* ============ render: tabelas ============ */
+function renderTabelas(A, P){
+  const dcell = d => '<td class="'+(d>0?'up':d<0?'down':'')+'">'+(Math.abs(d)<0.5?'—':signed(d))+'</td>';
+  const linha = (nome, chip, a, p, cls) =>
+    '<tr'+(cls?' class="'+cls+'"':'')+'><td>'+(chip?'<span class="chip" style="background:var('+chip+')"></span>':'')+nome+'</td>'
+    + '<td>'+money(a)+'</td><td>'+money(p)+'</td>'+dcell(p-a)+'</tr>';
+
+  let t = '<thead><tr><th>Componente (ao ano)</th><th>Atual</th><th>Proposta</th><th>Diferença</th></tr></thead><tbody>';
+  COMPS.forEach(c => t += linha(c.n, c.cor, A.g[c.k], P.g[c.k]));
+  t += linha('Remuneração total (total comp)', null, A.totalComp, P.totalComp, 'sum');
+  t += '<tr><td>Parcela variável (bônus + ILP)</td><td>'+PCT.format(A.pctVariavel)+'%</td><td>'+PCT.format(P.pctVariavel)+'%</td>'
+     + '<td class="'+(P.pctVariavel>A.pctVariavel?'down':P.pctVariavel<A.pctVariavel?'up':'')+'">'
+     + (Math.abs(P.pctVariavel-A.pctVariavel)<0.05 ? '—' : (P.pctVariavel>A.pctVariavel?'+':'−')+PCT.format(Math.abs(P.pctVariavel-A.pctVariavel))+' p.p.')+'</td></tr>';
+  t += '</tbody>';
+  $('#tbl-comp').innerHTML = t;
+
+  const mneg = v => (v > 0.5 ? '−' : '') + money(v);
+  const neg = (nome, a, p) => '<tr class="sub"><td>'+nome+'</td><td>'+mneg(a)+'</td><td>'+mneg(p)+'</td>'
+    + '<td class="'+((p-a)>0?'down':(p-a)<0?'up':'')+'">'+(Math.abs(p-a)<0.5?'—':signed(-(p-a)))+'</td></tr>';
+
+  let l = '<thead><tr><th>Do bruto ao líquido (ao ano)</th><th>Atual</th><th>Proposta</th><th>Diferença</th></tr></thead><tbody>';
+  l += linha('Bruto em folha (salário, 13º, férias, bônus, ILP)', null, A.brutoFolha, P.brutoFolha);
+  l += neg('INSS', A.inss, P.inss);
+  l += neg('IRRF', A.ir, P.ir);
+  l += neg('Seu aporte na previdência privada', A.prevFunc, P.prevFunc);
+  l += neg('Descontos mensais', A.desc, P.desc);
+  l += linha('Líquido no bolso', null, A.liquido, P.liquido, 'sum');
+  l += '<tr class="sub"><td>Alíquota efetiva sobre a folha</td><td>'+PCT.format(A.aliqEfetiva)+'%</td><td>'+PCT.format(P.aliqEfetiva)+'%</td>'
+     + '<td class="'+(P.aliqEfetiva>A.aliqEfetiva?'down':P.aliqEfetiva<A.aliqEfetiva?'up':'')+'">'
+     + (Math.abs(P.aliqEfetiva-A.aliqEfetiva)<0.05?'—':(P.aliqEfetiva>A.aliqEfetiva?'+':'−')+PCT.format(Math.abs(P.aliqEfetiva-A.aliqEfetiva))+' p.p.')+'</td></tr>';
+  l += linha('+ Benefícios', '--c4', A.g.benef, P.g.benef);
+  l += linha('+ Previdência aportada pela empresa', '--c5', A.g.prev, P.g.prev);
+  l += linha('+ FGTS depositado', '--c3', A.g.fgts, P.g.fgts);
+  l += linha('Valor percebido no ano', null, A.percebido, P.percebido, 'sum');
+  l += linha('Equivalente por mês', null, A.percebidoMes, P.percebidoMes);
+  l += '</tbody>';
+  $('#tbl-liq').innerHTML = l;
+}
+
+/* ============ ponto de equilíbrio ============ */
+function pontoEquilibrio(sProp, alvo){
+  let lo = 0, hi = Math.max(1000, sProp.salario*4 + 20000);
+  const val = x => calcular(Object.assign({}, sProp, {salario:x})).percebido;
+  if(val(hi) < alvo) return hi;
+  for(let i=0;i<60;i++){
+    const mid = (lo+hi)/2;
+    if(val(mid) < alvo) lo = mid; else hi = mid;
+  }
+  return (lo+hi)/2;
+}
+
+/* ============ atualização geral ============ */
+let ULT = null;
+
+function atualizar(){
+  lerCFG();
+  const sa = lerCenario('a'), sp = lerCenario('p');
+  const A = calcular(sa), P = calcular(sp);
+  ULT = {sa, sp, A, P};
+
+  // resumos dentro dos cartões
+  [['a',sa,A],['p',sp,P]].forEach(([p,s,r])=>{
+    $('#'+p+'-sub-sal').innerHTML = 'Salário bruto no ano: <b>'+money(r.g.salario + r.g.decimo)+'</b>'+(CFG.decimo?' (com 13º e férias)':'');
+    $('#'+p+'-sub-bonus').innerHTML = 'Bônus esperado: <b>'+money(r.bonusBruto)+'</b>/ano';
+    $('#'+p+'-sub-ilp').innerHTML = s.ilpAnos > 0 && s.ilpGrant > 0
+      ? 'Vesting de <b>'+money(r.ilpBruto)+'</b>/ano por '+fmtIn(s.ilpAnos)+' ano(s)'
+      : 'Sem ILP neste cenário';
+    $('#'+p+'-sub-prev').innerHTML = 'Empresa aporta <b>'+money2(r.prevEmpM)+'</b>/mês · você, <b>'+money2(r.prevFuncM)+'</b>/mês';
+    $('#'+p+'-ben-tot').textContent = money2(r.benefM - s.descontos);
+  });
+
+  // veredito
+  const d = P.percebido - A.percebido;
+  const pct = A.percebido > 0 ? d/A.percebido*100 : 0;
+  const pill = $('#v-pill'), pt = $('#v-pill-txt');
+  pill.className = 'pill ' + (d >= 0 ? 'up' : 'down');
+  pt.textContent = (Math.abs(d) < 500 ? 'Praticamente equivalente' : (d>0?'+':'−')+PCT.format(Math.abs(pct))+'% ao ano');
+  $('#v-title').textContent = Math.abs(d) < 500
+    ? 'Os dois pacotes se equivalem'
+    : (d > 0 ? money(d)+' a mais por ano' : money(-d)+' a menos por ano');
+
+  const stat = (id, v, dv, base) => {
+    $('#v-'+id).textContent = money(v);
+    const e = $('#v-'+id+'-d');
+    const p2 = base > 0 ? dv/base*100 : 0;
+    e.className = 'd ' + (dv > 0 ? 'up' : dv < 0 ? 'down' : '');
+    e.textContent = Math.abs(dv) < 500 ? 'igual ao atual' : signed(dv)+' ('+(dv>0?'+':'−')+PCT.format(Math.abs(p2))+'%)';
+  };
+  stat('tc',  P.totalComp, P.totalComp-A.totalComp, A.totalComp);
+  stat('liq', P.liquido,   P.liquido-A.liquido,     A.liquido);
+  stat('val', P.percebido, d,                        A.percebido);
+
+  renderComp(A, P);
+  renderDelta(A, P, pontoEquilibrio(sp, A.percebido), sp.salario);
+  renderTabelas(A, P);
+  salvar();
+}
+
+/* ============ persistência ============ */
+const CHAVE = 'simulador-proposta-v1';
+function salvar(){
+  try{
+    localStorage.setItem(CHAVE, JSON.stringify({
+      a: lerCenario('a'), p: lerCenario('p'),
+      cfg: {
+        inss:CFG.inss, irrf:CFG.irrf.map(f=>({limite:isFinite(f.limite)?f.limite:null, aliq:f.aliq, ded:f.ded})),
+        simplificado:CFG.simplificado, simplOn:CFG.simplOn, dependentes:CFG.dependentes,
+        decimo:CFG.decimo, fgts:CFG.fgts,
+        redOn:CFG.redOn, redIsen:CFG.redIsen, redTeto:CFG.redTeto, redA:CFG.redA, redB:CFG.redB
+      }
+    }));
+  }catch(e){}
+}
+function carregar(){
+  try{
+    const raw = localStorage.getItem(CHAVE);
+    if(!raw) return null;
+    const o = JSON.parse(raw);
+    if(o && o.cfg){
+      if(Array.isArray(o.cfg.inss) && o.cfg.inss.length === CFG.inss.length) CFG.inss = o.cfg.inss;
+      if(Array.isArray(o.cfg.irrf) && o.cfg.irrf.length === CFG.irrf.length)
+        CFG.irrf = o.cfg.irrf.map(f=>({limite: f.limite==null?Infinity:f.limite, aliq:f.aliq, ded:f.ded}));
+      ['simplificado','simplOn','dependentes','decimo','fgts','redOn','redIsen','redTeto','redA','redB']
+        .forEach(k => { if(o.cfg[k] !== undefined) CFG[k] = o.cfg[k]; });
+    }
+    return o;
+  }catch(e){ return null; }
+}
+
+/* ============ resumo em texto ============ */
+function resumoTexto(){
+  if(!ULT) return '';
+  const {A,P,sp} = ULT, d = P.percebido - A.percebido;
+  const li = (n,a,p) => n.padEnd(34,' ') + money(a).padStart(14,' ') + money(p).padStart(14,' ') + signed(p-a).padStart(14,' ');
+  const L = [];
+  L.push('AVALIAÇÃO DA PROPOSTA — valores anuais');
+  L.push(''.padEnd(76,'='));
+  L.push('Componente'.padEnd(34,' ') + 'Atual'.padStart(14,' ') + 'Proposta'.padStart(14,' ') + 'Diferença'.padStart(14,' '));
+  COMPS.forEach(c => L.push(li(c.n, A.g[c.k], P.g[c.k])));
+  L.push(''.padEnd(76,'-'));
+  L.push(li('Remuneração total', A.totalComp, P.totalComp));
+  L.push(li('Líquido no bolso', A.liquido, P.liquido));
+  L.push(li('Valor percebido', A.percebido, P.percebido));
+  L.push(li('Equivalente por mês', A.percebidoMes, P.percebidoMes));
+  L.push('');
+  L.push('Parcela variável: ' + PCT.format(A.pctVariavel) + '% hoje → ' + PCT.format(P.pctVariavel) + '% na proposta.');
+  L.push('Ponto de equilíbrio: salário de ' + money2(pontoEquilibrio(sp, A.percebido)) + '/mês na proposta.');
+  L.push(d >= 0 ? 'Conclusão: a proposta rende ' + money(d) + ' a mais por ano.'
+                : 'Conclusão: a proposta rende ' + money(-d) + ' a menos por ano.');
+  return L.join('\n');
+}
+
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'), 2400);
+}
+
+/* ============ eventos ============ */
+document.addEventListener('input', e => {
+  if(e.target.closest('#cenarios, #params')) atualizar();
+});
+document.addEventListener('change', e => {
+  if(e.target.closest('#cenarios, #params')) atualizar();
+});
+document.addEventListener('blur', e => {
+  const el = e.target;
+  if(el && el.tagName === 'INPUT' && el.hasAttribute('data-money')) el.value = fmtIn(num(el.value));
+}, true);
+document.addEventListener('click', e => {
+  const add = e.target.closest('[data-add]');
+  if(add){
+    const row = benRow(add.dataset.add, 'Novo benefício', 0);
+    $('.lbl', row).focus(); $('.lbl', row).select();
+    atualizar();
+  }
+});
+
+$('#btn-espelhar').addEventListener('click', () => {
+  escreverCenario('p', lerCenario('a'));
+  atualizar(); toast('Valores copiados para a proposta.');
+});
+$('#btn-reset').addEventListener('click', () => {
+  escreverCenario('a', SEED.a); escreverCenario('p', SEED.p);
+  atualizar(); toast('Exemplo restaurado.');
+});
+$('#btn-copiar').addEventListener('click', async () => {
+  const txt = resumoTexto();
+  try{
+    await navigator.clipboard.writeText(txt);
+    toast('Resumo copiado.');
+  }catch(err){
+    const ta = document.createElement('textarea');
+    ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try{ ok = document.execCommand('copy'); }catch(e2){}
+    ta.remove();
+    toast(ok ? 'Resumo copiado.' : 'Não foi possível copiar aqui.');
+  }
+});
+
+/* ============ início ============ */
+const salvo = carregar();
+montarTabelas();
+escreverCenario('a', (salvo && salvo.a) || SEED.a);
+escreverCenario('p', (salvo && salvo.p) || SEED.p);
+atualizar();
+
+})();
+</script>
+</body>
+</html>
