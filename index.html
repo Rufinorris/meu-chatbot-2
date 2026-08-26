@@ -115,6 +115,9 @@ h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif; text-wrap
 select{border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:7px;
   padding:7px 8px; font:inherit; font-size:13px; width:100%}
 select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+.inp select.unit{flex:none; width:auto; border:0; background:transparent; color:var(--muted); border-radius:0;
+  font-size:11px; font-weight:500; padding:0 2px 0 6px; cursor:pointer}
+.inp select.unit:focus{box-shadow:none; border:0; color:var(--accent)}
 .sub{font-size:11.5px; color:var(--muted); padding:2px 0 10px; text-align:right}
 .sub b{color:var(--ink-2); font-weight:500}
 
@@ -479,7 +482,8 @@ function calcular(s){
   const decBruto = CFG.decimo ? sal : 0;
 
   // parcela variável, tributada na margem sobre um mês regular
-  const bonusBruto = sal * 12 * (s.bonusPct/100) * (s.bonusAting/100);
+  const bonusAlvo = s.bonusModo === 'pct' ? sal * 12 * (s.bonusVal/100) : s.bonusVal;
+  const bonusBruto = Math.max(0, bonusAlvo) * (s.bonusAting/100);
   const ilpBruto = s.ilpAnos > 0 ? s.ilpGrant / s.ilpAnos : 0;
 
   function marginal(extra){
@@ -520,14 +524,15 @@ function calcular(s){
     inss:inssTot, ir:irTot, prevFunc:prevTot, desc:descTot,
     liquido, percebido,
     aliqEfetiva: brutoFolha>0 ? (inssTot+irTot)/brutoFolha*100 : 0,
-    benefM, prevEmpM, prevFuncM, bonusBruto, ilpBruto,
+    benefM, prevEmpM, prevFuncM, bonusAlvo, bonusBruto, ilpBruto,
+    bonusPctSal: sal > 0 ? bonusBruto/(sal*12)*100 : 0,
     liquidoMes: liquido/12, percebidoMes: percebido/12
   };
 }
 
 /* ============ cenários: sementes ============ */
 const SEED = {
-  a:{ salario:18000, bonusPct:15, bonusAting:100, ilpGrant:0, ilpAnos:4, ilpTrib:'salario',
+  a:{ salario:18000, bonusVal:32400, bonusModo:'rs', bonusAting:100, ilpGrant:0, ilpAnos:4, ilpTrib:'salario',
       prevEmp:5, prevFunc:5, descontos:180,
       beneficios:[
         {l:'Vale refeição / alimentação', v:1200},
@@ -535,7 +540,7 @@ const SEED = {
         {l:'Plano odontológico', v:90},
         {l:'Auxílio home office', v:200}
       ]},
-  p:{ salario:22000, bonusPct:20, bonusAting:100, ilpGrant:120000, ilpAnos:4, ilpTrib:'salario',
+  p:{ salario:22000, bonusVal:52800, bonusModo:'rs', bonusAting:100, ilpGrant:120000, ilpAnos:4, ilpTrib:'salario',
       prevEmp:6, prevFunc:6, descontos:220,
       beneficios:[
         {l:'Vale refeição / alimentação', v:1500},
@@ -556,7 +561,9 @@ function cardHTML(p, titulo, tag, cls){
   + '<div class="sub" id="'+p+'-sub-sal"></div>'
 
   + '<div class="group-t"><span>Bônus anual</span></div>'
-  + '<div class="field"><label>Bônus alvo<span class="hint">% do salário anual (12 meses)</span></label><div class="inp"><input id="'+p+'-bonusPct" inputmode="decimal"><span class="suf">%</span></div></div>'
+  + '<div class="field"><label>Bônus alvo<span class="hint">em reais no ano ou em % do salário anual</span></label>'
+  +   '<div class="inp"><input id="'+p+'-bonusVal" inputmode="decimal" data-money>'
+  +   '<select class="unit" id="'+p+'-bonusModo" aria-label="Unidade do bônus"><option value="rs">R$/ano</option><option value="pct">% sal.</option></select></div></div>'
   + '<div class="field"><label>Atingimento esperado<span class="hint">quanto do alvo você espera de fato receber</span></label><div class="inp"><input id="'+p+'-bonusAting" inputmode="decimal"><span class="suf">%</span></div></div>'
   + '<div class="sub" id="'+p+'-sub-bonus"></div>'
 
@@ -649,12 +656,13 @@ function lerCFG(){
 }
 
 /* ============ leitura e escrita dos cenários ============ */
-const CAMPOS = ['salario','bonusPct','bonusAting','ilpGrant','ilpAnos','prevEmp','prevFunc','descontos'];
+const CAMPOS = ['salario','bonusVal','bonusAting','ilpGrant','ilpAnos','prevEmp','prevFunc','descontos'];
 
 function lerCenario(p){
   const s = {};
   CAMPOS.forEach(k => s[k] = num($('#'+p+'-'+k).value));
   s.ilpTrib = $('#'+p+'-ilpTrib').value;
+  s.bonusModo = $('#'+p+'-bonusModo').value;
   s.beneficios = Array.from(document.querySelectorAll('#'+p+'-ben .ben-row')).map(r => ({
     l: $('.lbl', r).value, v: num($('.val', r).value)
   }));
@@ -664,6 +672,7 @@ function lerCenario(p){
 function escreverCenario(p, s){
   CAMPOS.forEach(k => $('#'+p+'-'+k).value = fmtIn(s[k]||0));
   $('#'+p+'-ilpTrib').value = s.ilpTrib || 'salario';
+  $('#'+p+'-bonusModo').value = s.bonusModo || 'rs';
   $('#'+p+'-ben').innerHTML = '';
   (s.beneficios||[]).forEach(b => benRow(p, b.l, b.v));
 }
@@ -816,7 +825,9 @@ function atualizar(){
   // resumos dentro dos cartões
   [['a',sa,A],['p',sp,P]].forEach(([p,s,r])=>{
     $('#'+p+'-sub-sal').innerHTML = 'Salário bruto no ano: <b>'+money(r.g.salario + r.g.decimo)+'</b>'+(CFG.decimo?' (com 13º e férias)':'');
-    $('#'+p+'-sub-bonus').innerHTML = 'Bônus esperado: <b>'+money(r.bonusBruto)+'</b>/ano';
+    $('#'+p+'-sub-bonus').innerHTML = r.bonusBruto > 0
+      ? 'Bônus esperado: <b>'+money(r.bonusBruto)+'</b>/ano · equivale a <b>'+PCT.format(r.bonusPctSal)+'%</b> do salário anual'
+      : 'Sem bônus neste cenário';
     $('#'+p+'-sub-ilp').innerHTML = s.ilpAnos > 0 && s.ilpGrant > 0
       ? 'Vesting de <b>'+money(r.ilpBruto)+'</b>/ano por '+fmtIn(s.ilpAnos)+' ano(s)'
       : 'Sem ILP neste cenário';
@@ -871,6 +882,13 @@ function carregar(){
     const raw = localStorage.getItem(CHAVE);
     if(!raw) return null;
     const o = JSON.parse(raw);
+    // versões anteriores guardavam o bônus só em % do salário anual
+    ['a','p'].forEach(k => {
+      const c = o && o[k];
+      if(c && c.bonusVal === undefined && c.bonusPct !== undefined){
+        c.bonusVal = c.bonusPct; c.bonusModo = 'pct';
+      }
+    });
     if(o && o.cfg){
       if(Array.isArray(o.cfg.inss) && o.cfg.inss.length === CFG.inss.length) CFG.inss = o.cfg.inss;
       if(Array.isArray(o.cfg.irrf) && o.cfg.irrf.length === CFG.irrf.length)

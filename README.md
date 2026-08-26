@@ -10,7 +10,7 @@ Para cada cenário (**Situação atual** e **Proposta recebida**):
 | Entrada | Observação |
 | --- | --- |
 | Salário mensal bruto | 12 salários + 13º + 1/3 de férias |
-| Bônus anual | alvo em % do salário anual × atingimento esperado |
+| Bônus anual | alvo em reais no ano ou em % do salário anual, × atingimento esperado |
 | ILP | valor total do grant ÷ anos de vesting; tributável como salário ou 15% |
 | Previdência privada | aporte da empresa e aporte próprio (deduz IRRF até 12%, regra do PGBL) |
 | Benefícios mensais | lista editável (VR/VA, saúde, odonto, home office, educação…) |
