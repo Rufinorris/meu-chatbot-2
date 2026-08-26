@@ -1108,10 +1108,15 @@ function transicao(sa, sp, A, P){
   const ganho      = P.liqExtra(Math.max(0, sp.signing));
   const bruto      = Math.max(0,sp.perdaBonus) + Math.max(0,sp.perdaIlp);
   const liquido    = perdaBonus + perdaIlp - ganho;
-  const dAno       = P.total - A.total;
+  // O ILP da empresa atual entra na comparação anual como renda. Se ele também está
+  // sendo contado inteiro como perda na saída, é a mesma coisa duas vezes: aqui a
+  // conta anual passa a ser a de depois que essas ações acabarem.
+  const ilpAnual   = sp.perdaIlp > 0
+    ? (sa.ilpTrib === 'cap' ? A.g.ilp*0.85 : A.liqExtra(A.g.ilp)) : 0;
+  const dAno       = (P.total - A.total) + ilpAnual;
   const ano1       = dAno - liquido;
   const meses      = (dAno > 0 && liquido > 0) ? liquido/(dAno/12) : (liquido <= 0 ? 0 : Infinity);
-  return {perdaBonus, perdaIlp, ganho, bruto, liquido, dAno, ano1, meses,
+  return {perdaBonus, perdaIlp, ganho, bruto, liquido, dAno, ano1, meses, ilpAnual,
           tem: bruto > 0 || sp.signing > 0};
 }
 
@@ -1139,9 +1144,13 @@ function renderPrimeiro(T){
   else seg = 'Com a diferença anual de '+money(T.dAno)+', a troca leva <b>'+prazo(T.meses)
     + '</b> para se pagar.';
 
+  if(T.ilpAnual > 0) seg += ' <b>A diferença anual usada aqui é a de depois que essas ações acabarem</b> ('
+    + signed(T.dAno)+', contra '+signed(T.dAno - T.ilpAnual)+' enquanto elas ainda vencem) — o ILP está contado '
+    + 'inteiro como perda acima, e somá-lo também como renda anual contaria a mesma coisa duas vezes.';
+
   el.innerHTML = '<div><span class="k">Diferença no primeiro ano</span>'
     + '<span class="v num'+(T.ano1 < 0 ? ' neg' : '')+'">'+signed(T.ano1)+'</span>'
-    + '<span class="d">contra '+signed(T.dAno)+' nos anos seguintes</span></div>'
+    + '<span class="d">contra '+signed(T.dAno)+' por ano depois disso</span></div>'
     + '<div><p>'+txt+'</p><p>'+seg+'</p></div>';
 }
 
