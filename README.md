@@ -11,7 +11,7 @@ Para cada cenário — **Situação atual** e **Proposta recebida**:
 | Entrada | Observação |
 | --- | --- |
 | Salário mensal bruto | 12 salários + 13º + 1/3 de férias |
-| Bônus anual | em reais no ano ou em % do salário anual, × atingimento esperado |
+| Bônus anual | em reais no ano ou em % do salário anual, × atingimento esperado; tributável como PLR (tabela exclusiva, sem INSS nem FGTS) ou como salário |
 | ILP | valor por ano, total do grant ÷ vesting, ou calculado pelo cronograma de vesting; tributável como salário ou a 15% |
 | Cronograma de vesting | preço de exercício, preço esperado da ação, câmbio e quantas ações vencem por ano — só o que ainda está em carência |
 | Previdência privada | aporte da empresa e o seu, em R$/mês ou % do salário (o seu deduz IRRF até 12%, regra do PGBL) |
@@ -43,8 +43,8 @@ barra de veredito acompanha a rolagem.
 ## Premissas fiscais
 
 Tabelas de INSS e IRRF mensais vigentes em 2025/2026, desconto simplificado,
-dedução por dependente e o redutor do IRRF da Lei 15.270/2025 (isenção até
-R$ 5.000). **Todos os parâmetros são editáveis** no painel "Parâmetros fiscais e
+dedução por dependente, tabela anual da PLR e o redutor do IRRF da Lei
+15.270/2025 (isenção até R$ 5.000). **Todos os parâmetros são editáveis** no painel "Parâmetros fiscais e
 premissas" — confirme os valores vigentes antes de decidir.
 
 Os dados ficam salvos apenas no `localStorage` do navegador. Nada sai da máquina.

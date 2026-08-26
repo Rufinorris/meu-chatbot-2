@@ -460,6 +460,12 @@ tbody tr:last-child td{border-bottom:0}
           <div id="irrf-rows"></div>
         </div>
         <div>
+          <div class="group-t"><span>Tabela da PLR (anual)</span></div>
+          <div class="taxrow i3"><span class="cap">Base até (R$)</span><span class="cap" style="text-align:right">Alíq.</span><span class="cap" style="text-align:right">Dedução</span></div>
+          <div id="plr-rows"></div>
+          <p style="font-size:11.5px;color:var(--muted);margin:8px 0 0">A PLR é tributada em separado, por esta tabela, e não sofre INSS nem FGTS.</p>
+        </div>
+        <div>
           <div class="group-t"><span>Deduções e regras</span></div>
           <div class="field"><label>Dependentes<span class="hint">R$ 189,59 por dependente/mês</span></label><div class="inp"><input id="cfg-dep" inputmode="decimal"><span class="suf">un</span></div></div>
           <div class="field"><label>Desconto simplificado mensal</label><div class="inp"><span class="pre">R$</span><input id="cfg-simpl" inputmode="decimal"></div></div>
@@ -487,6 +493,7 @@ tbody tr:last-child td{border-bottom:0}
       <li><b>Líquido + benefícios:</b> o líquido em folha mais o que você recebe sem passar pelo contracheque — benefícios, previdência aportada pela empresa e FGTS. É o número que compara duas propostas de verdade.</li>
       <li><b>Previdência privada:</b> o seu aporte reduz a base do IRRF até 12% do rendimento bruto (regra do PGBL). Em plano VGBL não há dedução — deixe o seu aporte em 0 e trate-o como poupança.</li>
       <li><b>Primeiro ano:</b> o bônus que fica para trás por sair antes do pagamento, o ILP não vestido e o bônus de contratação acontecem uma vez só — por isso ficam fora da comparação anual e aparecem num recorte à parte, com o tempo que a troca leva para se pagar. Os valores são informados em bruto e descontados na alíquota marginal de cada empresa.</li>
+      <li><b>PLR:</b> tem tabela de imposto própria, anual e exclusiva, e não sofre INSS nem FGTS — por isso rende líquido mais que um bônus do mesmo valor tributado como salário. O seletor ao lado do campo troca entre os dois tratamentos; a tabela fica em "Parâmetros fiscais".</li>
       <li><b>Cronograma de vesting:</b> na unidade "vesting", o ILP anual vem de (preço esperado da ação − preço de exercício) × câmbio × ações que vencem em cada ano, contando só o que ainda está em carência. O que já venceu não entra: é ganho realizado, não renda futura.</li>
       <li><b>Média anual do vesting:</b> "pelo tempo que falta" divide o total pendente pelos anos que ainda restam até o fim do último vencimento — se o ano corrente já está pela metade, ele conta pela metade. "Pelos anos civis" divide pelo número de anos da tabela. A primeira é a taxa real de quem fica; a segunda achata o número quando o primeiro ano já começou.</li>
       <li><b>O que a média não cobre:</b> se a empresa outorga um novo lote todo ano, o que está em carência hoje é só o resíduo dos lotes antigos e subestima quem fica — acrescente os anos do lote esperado para ver o efeito. E se as ações forem de empresa fechada, o ganho só existe num evento de liquidez: o desconto para isso vai no preço esperado da ação.</li>
@@ -529,6 +536,10 @@ const CFG = {
   inss: [{limite:1518.00,aliq:0.075},{limite:2793.88,aliq:0.09},{limite:4190.83,aliq:0.12},{limite:8157.41,aliq:0.14}],
   irrf: [{limite:2428.80,aliq:0,ded:0},{limite:2826.65,aliq:0.075,ded:182.16},{limite:3751.05,aliq:0.15,ded:394.16},
          {limite:4664.68,aliq:0.225,ded:675.49},{limite:Infinity,aliq:0.275,ded:908.73}],
+  // PLR tem tabela anual exclusiva e não sofre INSS nem FGTS (Lei 10.101/2000)
+  plr:  [{limite:7640.80,aliq:0,ded:0},{limite:9922.28,aliq:0.075,ded:573.06},
+         {limite:13167.00,aliq:0.15,ded:1317.23},{limite:16380.38,aliq:0.225,ded:2304.76},
+         {limite:Infinity,aliq:0.275,ded:3123.78}],
   simplificado:607.20, simplOn:true, dependentes:0, valorDep:189.59,
   decimo:true, fgts:true,
   redOn:true, redIsen:5000, redTeto:7350, redA:978.62, redB:0.133145
@@ -556,6 +567,11 @@ const inss = base => {
   for(const f of CFG.inss){ if(base <= prev) break; t += (Math.min(base,f.limite)-prev)*f.aliq; prev = f.limite; }
   return t;
 };
+function irrfPLR(base){
+  let imp = 0;
+  for(const f of CFG.plr){ if(base <= f.limite){ imp = base*f.aliq - f.ded; break; } }
+  return Math.max(0, imp);
+}
 function irrf(rendimento, deducoes){
   const abat = CFG.simplOn ? Math.max(deducoes, CFG.simplificado) : deducoes;
   const base = Math.max(0, rendimento - abat);
@@ -611,13 +627,13 @@ function calcular(s){
     return {inss: i2 - reg.inss, ir: irrf(sal+extra, ded(sal+extra,i2)) - reg.ir};
   };
   const liqExtra = extra => { const m = marginal(extra); return Math.max(0, extra - m.inss - m.ir); };
-  const mB = marginal(bonusBruto);
+  const mB = s.bonusTrib === 'plr' ? {inss:0, ir: irrfPLR(bonusBruto)} : marginal(bonusBruto);
   const mI = s.ilpTrib === 'cap' ? {inss:0, ir: Math.max(0,ilpBruto)*0.15} : marginal(ilpBruto);
 
   const g = {
     salario: sal*12,
     decimo:  decBruto + terco,
-    fgts:    CFG.fgts ? 0.08*(sal*12 + decBruto) : 0,
+    fgts:    CFG.fgts ? 0.08*(sal*12 + decBruto + (s.bonusTrib === 'plr' ? 0 : bonusBruto)) : 0,
     benef:   benefM*12,
     prev:    prevEmpM*12,
     bonus:   bonusBruto,
@@ -650,19 +666,29 @@ function calcular(s){
 /* ============ sementes ============ */
 const SEED = {
   a:{ salario:14000, bonus:32000, bonusModo:'rs', bonusAting:100,
-      ilp:0, ilpModo:'vest', ilpAnos:4, ilpTrib:'cap',
+      ilp:0, ilpModo:'vest', ilpAnos:4, ilpTrib:'cap', bonusTrib:'plr',
       vest:{ strike:204.06, preco:408.13, cambio:5.149, base:'restante',
              // o lote de 16 ações de 01/09/26 está a dias de vencer: conta como realizado
              anos:[{a:2026,q:5},{a:2027,q:24},{a:2028,q:24},{a:2029,q:12}] },
       prevEmp:0, prevEmpModo:'rs', prevFunc:0, prevFuncModo:'rs',
       descontos:0,
       beneficios:[{l:'Benefícios (VR/VA, saúde, odonto…)', v:1900}] },
-  p:{ salario:17000, bonus:51000, bonusModo:'rs', bonusAting:100,
+  // proposta conforme a carta do Grupo Boticário (início em 09/09/2026)
+  p:{ nome:'Grupo Boticário',
+      salario:15500, bonus:46500, bonusModo:'rs', bonusAting:100, bonusTrib:'plr',
       ilp:0, ilpModo:'ano', ilpAnos:4, ilpTrib:'salario',
       vest:{ strike:0, preco:0, cambio:5.149, base:'restante', anos:[] },
-      prevEmp:510, prevEmpModo:'rs', prevFunc:0, prevFuncModo:'rs',
-      descontos:0, perdaBonus:0, perdaIlp:0, signing:0,
-      beneficios:[{l:'Benefícios (VR/VA, saúde, odonto…)', v:1200}] }
+      // BotiPrev: básica de 1% até R$ 6.999,40 + 5% do que exceder; empresa paga 50% dela até os 40 anos
+      prevEmp:247.51, prevEmpModo:'rs', prevFunc:495.02, prevFuncModo:'rs',
+      descontos:45, perdaBonus:31000, perdaIlp:68299, signing:0,
+      beneficios:[
+        {l:'Vale alimentação', v:610},
+        {l:'Vale refeição (R$ 40/dia × 22)', v:880},
+        {l:'Vale natal (R$ 610 em dezembro)', v:50.83},
+        {l:'Auxílio home office', v:150},
+        {l:'Plano de saúde — a carta não informa o valor', v:0},
+        {l:'Plano odontológico — Dental 300, sem valor', v:0}
+      ] }
 };
 
 /* ============ montagem dos cartões ============ */
@@ -695,6 +721,7 @@ function cardHTML(p, titulo, tag, cls){
   + campo({id:p+'-bonus', label:'Bônus alvo', hint:'em reais no ano ou em % do salário anual', money:true,
            unidades:[['rs','R$/ano'],['pct','% sal.']]})
   + campo({id:p+'-bonusAting', label:'Atingimento esperado', hint:'quanto do alvo você espera de fato receber', suf:'%'})
+  + campo({id:p+'-bonusTrib', label:'Tributação do bônus', wide:true, select:true})
   + sub(p+'-sub-bonus')
 
   + grupo('ILP — incentivo de longo prazo')
@@ -726,7 +753,7 @@ function cardHTML(p, titulo, tag, cls){
   + sub(p+'-sub-prev')
 
   + (p === 'p' ? (grupo('Ao trocar de empresa')
-      + campo({id:'p-perdaBonus', label:'Bônus/PLR que fica para trás', hint:'o que você deixa de receber por sair antes do pagamento', pre:'R$', money:true})
+      + campo({id:'p-perdaBonus', label:'Bônus/PLR que fica para trás', hint:'o que você deixa de receber por sair antes do pagamento, mais o que a nova empresa paga só proporcional no primeiro ano', pre:'R$', money:true})
       + campo({id:'p-perdaIlp',   label:'ILP não vestido que fica para trás', hint:'ações ou parcelas que ainda não venceram', pre:'R$', money:true})
       + campo({id:'p-signing',    label:'Bônus de contratação', hint:'signing bonus ou recomposição do que você perde', pre:'R$', money:true})
       + sub('p-sub-troca')) : '')
@@ -744,11 +771,12 @@ $('#cenarios').innerHTML = cardHTML('a','Situação atual','Hoje','scn-atual') +
 const NOMES = {a:'Atual', p:'Proposta'};
 const nomeDe = p => ($('#'+p+'-nome').value || '').trim();
 
-// o campo de tributação do ILP é um select, não um número
+// dois campos são selects, não números
 ['a','p'].forEach(p => {
-  const f = $('#'+p+'-ilpTrib').closest('.field');
-  f.querySelector('.inp').outerHTML =
+  $('#'+p+'-ilpTrib').closest('.field').querySelector('.inp').outerHTML =
     '<select id="'+p+'-ilpTrib"><option value="salario">Rendimento do trabalho</option><option value="cap">Ganho de capital (15%)</option></select>';
+  $('#'+p+'-bonusTrib').closest('.field').querySelector('.inp').outerHTML =
+    '<select id="'+p+'-bonusTrib"><option value="plr">PLR (tabela exclusiva)</option><option value="salario">Como salário</option></select>';
 });
 
 function vestRow(p, ano, q){
@@ -833,17 +861,19 @@ function montarTabelas(){
     $('[data-tax$=".limite"]',d).value = fmtIn(f.limite);
     $('[data-tax$=".aliq"]',d).value = fmtIn(f.aliq*100);
   });
-  const rw = $('#irrf-rows'); rw.innerHTML = '';
-  CFG.irrf.forEach((f,i)=>{
-    const ult = i === CFG.irrf.length-1;
-    const d = document.createElement('div'); d.className = 'taxrow i3';
-    d.innerHTML = '<div class="inp"><span class="pre">até</span><input data-tax="irrf.'+i+'.limite" inputmode="decimal"'+(ult?' disabled value="acima"':'')+'></div>'
-                + '<div class="inp"><input data-tax="irrf.'+i+'.aliq" inputmode="decimal"><span class="suf">%</span></div>'
-                + '<div class="inp"><span class="pre">R$</span><input data-tax="irrf.'+i+'.ded" inputmode="decimal"></div>';
-    rw.appendChild(d);
-    if(!ult) $('[data-tax$=".limite"]',d).value = fmtIn(f.limite);
-    $('[data-tax$=".aliq"]',d).value = fmtIn(f.aliq*100);
-    $('[data-tax$=".ded"]',d).value = fmtIn(f.ded);
+  [['irrf','#irrf-rows'],['plr','#plr-rows']].forEach(([tab, sel])=>{
+    const rw = $(sel); rw.innerHTML = '';
+    CFG[tab].forEach((f,i)=>{
+      const ult = i === CFG[tab].length-1;
+      const d = document.createElement('div'); d.className = 'taxrow i3';
+      d.innerHTML = '<div class="inp"><span class="pre">até</span><input data-tax="'+tab+'.'+i+'.limite" inputmode="decimal"'+(ult?' disabled value="acima"':'')+'></div>'
+                  + '<div class="inp"><input data-tax="'+tab+'.'+i+'.aliq" inputmode="decimal"><span class="suf">%</span></div>'
+                  + '<div class="inp"><span class="pre">R$</span><input data-tax="'+tab+'.'+i+'.ded" inputmode="decimal"></div>';
+      rw.appendChild(d);
+      if(!ult) $('[data-tax$=".limite"]',d).value = fmtIn(f.limite);
+      $('[data-tax$=".aliq"]',d).value = fmtIn(f.aliq*100);
+      $('[data-tax$=".ded"]',d).value = fmtIn(f.ded);
+    });
   });
   $('#cfg-dep').value = fmtIn(CFG.dependentes);
   $('#cfg-simpl').value = fmtIn(CFG.simplificado);
@@ -885,6 +915,7 @@ function lerCenario(p){
   CAMPOS.forEach(k => { const el = $('#'+p+'-'+k); s[k] = el ? num(el.value) : 0; });
   MODOS.forEach(k => s[k+'Modo'] = $('#'+p+'-'+k+'Modo').value);
   s.ilpTrib = $('#'+p+'-ilpTrib').value;
+  s.bonusTrib = $('#'+p+'-bonusTrib').value;
   s.nome = nomeDe(p);
   s.vest = {
     strike: num($('#'+p+'-vStrike').value),
@@ -903,6 +934,7 @@ function escreverCenario(p, s){
   CAMPOS.forEach(k => { const el = $('#'+p+'-'+k); if(el) el.value = fmtIn(s[k]||0); });
   MODOS.forEach(k => $('#'+p+'-'+k+'Modo').value = s[k+'Modo'] || (k==='ilp' ? 'ano' : 'rs'));
   $('#'+p+'-ilpTrib').value = s.ilpTrib || 'salario';
+  $('#'+p+'-bonusTrib').value = s.bonusTrib || 'plr';
   $('#'+p+'-nome').value = s.nome || '';
   const v = s.vest || {};
   $('#'+p+'-vStrike').value = fmtIn(v.strike || 0);
@@ -1051,7 +1083,8 @@ function renderTabelas(A, P){
 // o que se perde ao sair e o que a proposta repõe acontecem uma vez só,
 // então ficam fora da comparação anual e viram um recorte do primeiro ano
 function transicao(sa, sp, A, P){
-  const perdaBonus = A.liqExtra(Math.max(0, sp.perdaBonus));
+  const pb = Math.max(0, sp.perdaBonus);
+  const perdaBonus = sa.bonusTrib === 'plr' ? pb - irrfPLR(pb) : A.liqExtra(pb);
   const perdaIlp   = sa.ilpTrib === 'cap' ? Math.max(0, sp.perdaIlp)*0.85 : A.liqExtra(Math.max(0, sp.perdaIlp));
   const ganho      = P.liqExtra(Math.max(0, sp.signing));
   const bruto      = Math.max(0,sp.perdaBonus) + Math.max(0,sp.perdaIlp);
@@ -1062,6 +1095,10 @@ function transicao(sa, sp, A, P){
   return {perdaBonus, perdaIlp, ganho, bruto, liquido, dAno, ano1, meses,
           tem: bruto > 0 || sp.signing > 0};
 }
+
+const prazo = m => m < 1 ? 'menos de um mês'
+  : m <= 24 ? PCT.format(m)+' meses'
+  : PCT.format(m/12)+' anos';
 
 function renderPrimeiro(T){
   const el = $('#primeiro');
@@ -1078,11 +1115,10 @@ function renderPrimeiro(T){
   let seg = '';
   if(T.meses === 0) seg = 'A recomposição cobre a perda: a troca já começa positiva.';
   else if(!isFinite(T.meses)) seg = 'Como a proposta rende menos por ano, essa perda não se recupera com o tempo.';
-  else if(T.meses < 1) seg = 'Com a diferença anual de '+money(T.dAno)+', a troca se paga em <b>menos de um mês</b>.';
   else if(T.meses <= 12) seg = 'Com a diferença anual de '+money(T.dAno)+', a troca se paga em <b>'
-    + PCT.format(T.meses)+' meses</b> — do primeiro ano em diante ela é lucro.';
-  else seg = 'Com a diferença anual de '+money(T.dAno)+', a troca leva <b>'+PCT.format(T.meses)
-    + ' meses</b> para se pagar.';
+    + prazo(T.meses)+'</b> — do primeiro ano em diante ela é lucro.';
+  else seg = 'Com a diferença anual de '+money(T.dAno)+', a troca leva <b>'+prazo(T.meses)
+    + '</b> para se pagar.';
 
   el.innerHTML = '<div><span class="k">Diferença no primeiro ano</span>'
     + '<span class="v num'+(T.ano1 < 0 ? ' neg' : '')+'">'+signed(T.ano1)+'</span>'
@@ -1129,8 +1165,7 @@ function renderResumo(A, P, equilib, salProp, T){
                         : 'a recomposição soma '+money(-T.liquido)+' líquidos') + '. '
        + (T.meses === 0 ? 'A troca já começa positiva.'
           : !isFinite(T.meses) ? 'Essa perda não se recupera com o tempo.'
-          : T.meses < 1 ? 'A troca se paga em menos de um mês.'
-          : 'A troca se paga em cerca de '+PCT.format(T.meses)+' meses.') + '</p>';
+          : 'A troca se paga em '+prazo(T.meses)+'.') + '</p>';
   }
   const dif = equilib - salProp;
   h += '<p>O ponto de equilíbrio é um salário de <b>'+money2(equilib)+'</b> por mês na proposta: '
@@ -1233,6 +1268,7 @@ function salvar(){
       cfg: {
         inss:CFG.inss,
         irrf:CFG.irrf.map(f=>({limite:isFinite(f.limite)?f.limite:null, aliq:f.aliq, ded:f.ded})),
+        plr:CFG.plr.map(f=>({limite:isFinite(f.limite)?f.limite:null, aliq:f.aliq, ded:f.ded})),
         simplificado:CFG.simplificado, simplOn:CFG.simplOn, dependentes:CFG.dependentes,
         decimo:CFG.decimo, fgts:CFG.fgts,
         redOn:CFG.redOn, redIsen:CFG.redIsen, redTeto:CFG.redTeto, redA:CFG.redA, redB:CFG.redB
@@ -1245,8 +1281,10 @@ function carregar(){
     const o = JSON.parse(localStorage.getItem(CHAVE) || 'null');
     if(o && o.cfg){
       if(Array.isArray(o.cfg.inss) && o.cfg.inss.length === CFG.inss.length) CFG.inss = o.cfg.inss;
-      if(Array.isArray(o.cfg.irrf) && o.cfg.irrf.length === CFG.irrf.length)
-        CFG.irrf = o.cfg.irrf.map(f=>({limite: f.limite==null?Infinity:f.limite, aliq:f.aliq, ded:f.ded}));
+      ['irrf','plr'].forEach(k => {
+        if(Array.isArray(o.cfg[k]) && o.cfg[k].length === CFG[k].length)
+          CFG[k] = o.cfg[k].map(f=>({limite: f.limite==null?Infinity:f.limite, aliq:f.aliq, ded:f.ded}));
+      });
       ['simplificado','simplOn','dependentes','decimo','fgts','redOn','redIsen','redTeto','redA','redB']
         .forEach(k => { if(o.cfg[k] !== undefined) CFG[k] = o.cfg[k]; });
     }
@@ -1274,7 +1312,7 @@ function resumoTexto(){
   const T = transicao(ULT.sa, sp, A, P);
   if(T.tem && Math.abs(T.liquido) >= 500){
     L.push('Primeiro ano: '+signed(T.ano1)+' (fica para trás '+money(T.liquido)+' líquidos na saída'
-      + (isFinite(T.meses) && T.meses > 0 ? '; a troca se paga em '+PCT.format(T.meses)+' meses' : '')+').');
+      + (isFinite(T.meses) && T.meses > 0 ? '; a troca se paga em '+prazo(T.meses) : '')+').');
   }
   L.push('Ponto de equilíbrio: salário de '+money2(equilibrio(sp, A.total))+'/mês na proposta.');
   L.push(d >= 0 ? 'Conclusão: entram '+money(d)+' a mais por ano.' : 'Conclusão: entram '+money(-d)+' a menos por ano.');
