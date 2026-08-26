@@ -269,11 +269,19 @@ tbody tr:last-child td{border-bottom:0}
 .chk .hint{display:block; font-size:11.5px; color:var(--muted)}
 
 /* ações e rodapé */
+.aviso{background:var(--accent-soft); border:1px solid var(--accent-line); border-radius:var(--r);
+  padding:14px 16px; margin-bottom:16px; display:flex; gap:14px; align-items:center; flex-wrap:wrap}
+.aviso p{margin:0; flex:1 1 320px; font-size:13.5px; color:var(--ink); line-height:1.55}
+.aviso p b{font-weight:600}
+.aviso .bts{display:flex; gap:8px; flex-wrap:wrap}
+.aviso[hidden]{display:none}
 .actions{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:16px}
 .btn{border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:8px; padding:9px 14px;
   font:inherit; font-size:13.5px; cursor:pointer; box-shadow:var(--shadow)}
 .btn:hover{border-color:var(--accent); color:var(--accent)}
 .btn:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--surface); font-weight:600}
+.btn.primary:hover{filter:brightness(1.08); background:var(--accent); border-color:var(--accent); color:var(--surface)}
 .toast{font-size:12.5px; color:var(--accent); opacity:0; transition:opacity .2s}
 .toast.on{opacity:1}
 .resumo{padding:20px 20px 18px}
@@ -372,6 +380,16 @@ tbody tr:last-child td{border-bottom:0}
 </div>
 
 <div class="wrap">
+
+  <div class="aviso" id="aviso" hidden>
+    <p><b>O exemplo embutido mudou desde a última vez que você usou.</b> Agora a Neon traz o ILP
+    calculado pelo cronograma de vesting das stock options, e a proposta vem preenchida com a carta
+    do Grupo Boticário. Aplicar substitui o que está na tela pelos valores novos.</p>
+    <div class="bts">
+      <button class="btn primary" type="button" id="aviso-sim">Aplicar exemplo novo</button>
+      <button class="btn" type="button" id="aviso-nao">Manter os meus</button>
+    </div>
+  </div>
 
   <div class="tabs" role="tablist" aria-label="Cenário">
     <button type="button" role="tab" data-tab="a" aria-selected="false"><b id="tab-a-nome">Situação atual</b><span class="tv" id="tab-a">—</span></button>
@@ -1261,9 +1279,12 @@ function atualizar(){
 
 /* ============ persistência ============ */
 const CHAVE = 'simulador-proposta-v3';
+const PRESET_V = 3;   // sobe quando as sementes mudam, para avisar quem já tem valores salvos
+let pvSalvo = PRESET_V;   // só passa a valer PRESET_V depois que o aviso é respondido
 function salvar(){
   try{
     localStorage.setItem(CHAVE, JSON.stringify({
+      pv: pvSalvo,
       a: lerCenario('a'), p: lerCenario('p'), anotacoes: $('#anotacoes').value,
       pc: {a: lerPC('a'), p: lerPC('p')},
       cfg: {
@@ -1289,6 +1310,10 @@ function carregar(){
       ['simplificado','simplOn','dependentes','decimo','fgts','redOn','redIsen','redTeto','redA','redB']
         .forEach(k => { if(o.cfg[k] !== undefined) CFG[k] = o.cfg[k]; });
     }
+    ['a','p'].forEach(k => {
+      const c = o && o[k];
+      if(c && (!c.vest || !(c.vest.anos||[]).length)) c.vest = SEED[k].vest;
+    });
     return o;
   }catch(e){ return null; }
 }
@@ -1405,6 +1430,8 @@ $('#btn-copiar').addEventListener('click', async () => {
 /* ============ início ============ */
 document.body.dataset.cen = 'p';
 const salvo = carregar();
+pvSalvo = salvo ? (salvo.pv || 0) : PRESET_V;
+const presetMudou = pvSalvo !== PRESET_V;
 montarTabelas();
 escreverCenario('a', (salvo && salvo.a) || SEED.a);
 escreverCenario('p', (salvo && salvo.p) || SEED.p);
@@ -1416,6 +1443,17 @@ const estreito = window.innerWidth <= 880;
 $('#scn-a').open = estreito;
 if(estreito) document.querySelectorAll('details.benef, #sec-det, #sec-liq').forEach(d => d.open = false);
 atualizar();
+if(presetMudou) $('#aviso').hidden = false;
+
+$('#aviso-sim').addEventListener('click', () => {
+  escreverCenario('a', SEED.a);
+  escreverCenario('p', SEED.p);
+  pvSalvo = PRESET_V;
+  $('#aviso').hidden = true;
+  atualizar();
+  $('#resultado').scrollIntoView({behavior:'smooth', block:'start'});
+});
+$('#aviso-nao').addEventListener('click', () => { pvSalvo = PRESET_V; $('#aviso').hidden = true; salvar(); });
 
 })();
 </script>
