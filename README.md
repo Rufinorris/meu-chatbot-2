@@ -16,19 +16,21 @@ Para cada cenário — **Situação atual** e **Proposta recebida**:
 | Previdência privada | aporte da empresa e o seu, em R$/mês ou % do salário (o seu deduz IRRF até 12%, regra do PGBL) |
 | Benefícios mensais | lista editável (VR/VA, saúde, odonto, home office, educação…) |
 | Descontos em folha | coparticipação, vale-transporte, mensalidade do plano |
-| Custo de trabalhar aí | dias no escritório por mês × custo do dia, mais outros custos anuais |
+| Empresa | nome que aparece nos gráficos, nas tabelas e no resumo |
 
 E devolve três números anuais:
 
 - **Remuneração total (total comp)** — salário + 13º/férias + bônus + ILP + previdência da empresa + benefícios + FGTS.
 - **Líquido em folha** — o que cai na conta no ano, com INSS e IRRF descontados mês a mês, no 13º, no mês das férias e na margem sobre bônus e ILP.
-- **O que sobra** — o líquido menos os custos de trabalhar ali, mais o que não passa pelo contracheque (benefícios, previdência da empresa, FGTS). É o número que compara duas propostas de verdade.
+- **Líquido + benefícios** — o líquido em folha mais o que não passa pelo contracheque (benefícios, previdência da empresa, FGTS). É o número que compara duas propostas de verdade.
 
 Além disso: composição do pacote separando o que é garantido do que é variável,
-diferença componente a componente, alíquota efetiva e o **ponto de equilíbrio** —
-o salário que a proposta precisaria ter para sobrar o mesmo que hoje.
+diferença componente a componente, alíquota efetiva, o **ponto de equilíbrio** — o
+salário que a proposta precisaria ter para empatar com hoje — e um **resumo** em
+texto corrido, com um campo de anotações para o que os números não dizem.
 
-No celular os dois cenários viram abas, os blocos longos ficam recolhidos e a
+A proposta é o cenário em foco: o cartão da situação atual abre recolhido, já que
+muda pouco. No celular os dois viram abas, os blocos longos ficam recolhidos e a
 barra de veredito acompanha a rolagem.
 
 ## Premissas fiscais

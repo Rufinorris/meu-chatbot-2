@@ -84,12 +84,26 @@ h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif; text-wrap
 /* ---------- cartões ---------- */
 .grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px}
 .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow)}
-.card>header{padding:13px 18px; border-bottom:1px solid var(--line-2); display:flex; align-items:baseline; gap:10px; justify-content:space-between}
-.card>header h3{font-size:16px; font-weight:600; letter-spacing:-.01em}
-.card>header .tag{font-size:11px; letter-spacing:.09em; text-transform:uppercase; font-weight:600; color:var(--muted)}
 .card .body{padding:4px 18px 18px}
-.scn-atual>header{border-top:3px solid var(--muted); border-radius:var(--r) var(--r) 0 0}
-.scn-prop>header{border-top:3px solid var(--accent); border-radius:var(--r) var(--r) 0 0}
+details.scn{align-self:start}
+details.scn>summary{cursor:pointer; list-style:none; padding:13px 18px; display:flex; align-items:center; gap:12px;
+  justify-content:space-between; border-radius:var(--r) var(--r) 0 0}
+details.scn[open]>summary{border-bottom:1px solid var(--line-2)}
+details.scn>summary::-webkit-details-marker{display:none}
+details.scn>summary:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+details.scn>summary h3{font-size:16px; font-weight:600; letter-spacing:-.01em; overflow-wrap:anywhere}
+details.scn>summary .tag{font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; font-weight:600; color:var(--muted); display:block}
+details.scn>summary .tt{min-width:0}
+details.scn>summary .stot{font-size:14px; font-weight:600; color:var(--ink-2); white-space:nowrap; flex:none}
+details.scn>summary .stot:after{content:"▾"; font-family:"IBM Plex Sans",sans-serif; font-weight:400; color:var(--muted); margin-left:9px; display:inline-block; transition:transform .15s}
+details.scn[open]>summary .stot:after{transform:rotate(180deg)}
+.scn-atual>summary{border-top:3px solid var(--muted)}
+.scn-prop>summary{border-top:3px solid var(--accent)}
+.scn-prop>summary .stot{color:var(--accent)}
+input.txt{border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:7px;
+  padding:8px 10px; font:inherit; font-size:14px; width:100%; min-width:0}
+input.txt:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+input.txt::placeholder{color:var(--muted)}
 
 /* ---------- campos ---------- */
 .field{display:grid; grid-template-columns:1fr 136px; gap:10px; align-items:center; padding:9px 0; border-bottom:1px solid var(--line-2)}
@@ -178,7 +192,7 @@ section{margin-top:32px}
 /* deltas */
 .delta{padding:18px; margin-top:18px}
 .bar-lab.dhead{margin-bottom:10px}
-#resultado{scroll-margin-top:100px}
+#resultado,#sec-resumo,details.sec{scroll-margin-top:100px}
 .drow{display:grid; grid-template-columns:minmax(120px,1.1fr) minmax(140px,3fr) 116px; gap:12px; align-items:center; padding:5px 0}
 .drow .dl{font-size:13px; color:var(--ink-2)}
 .dtrack{position:relative; height:20px}
@@ -232,6 +246,16 @@ tbody tr:last-child td{border-bottom:0}
 .btn:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
 .toast{font-size:12.5px; color:var(--accent); opacity:0; transition:opacity .2s}
 .toast.on{opacity:1}
+.resumo{padding:20px 20px 18px}
+.resumo p{margin:0 0 12px; font-size:15px; line-height:1.62; color:var(--ink-2); max-width:66ch}
+.resumo p:last-of-type{margin-bottom:0}
+.resumo p.lead{font-size:17px; color:var(--ink); font-family:"Bricolage Grotesque",sans-serif; letter-spacing:-.01em; line-height:1.45}
+.resumo b{color:var(--ink); font-weight:600}
+.resumo .nota-lab{display:block; margin:18px 0 6px; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:600}
+.resumo textarea{width:100%; min-height:74px; resize:vertical; border:1px solid var(--line); background:var(--surface-2);
+  color:var(--ink); border-radius:8px; padding:10px 12px; font:inherit; font-size:14px; line-height:1.5}
+.resumo textarea:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+.resumo textarea::placeholder{color:var(--muted)}
 .notes{margin-top:34px; padding-top:20px; border-top:1px solid var(--line); color:var(--muted); font-size:12.5px}
 .notes h4{margin:0 0 8px; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-2); font-family:"IBM Plex Sans",sans-serif}
 .notes ul{margin:0; padding-left:18px; display:grid; gap:5px; max-width:88ch}
@@ -287,7 +311,7 @@ tbody tr:last-child td{border-bottom:0}
   <header class="masthead">
     <p class="eyebrow">Simulador de remuneração · CLT</p>
     <h1>Vale a pena a proposta?</h1>
-    <p class="lede">O pacote inteiro, não só o salário: benefícios, bônus, ILP, previdência, FGTS, imposto e o que custa ir ao escritório.</p>
+    <p class="lede">O pacote inteiro, não só o salário: benefícios, bônus, ILP, previdência, FGTS e imposto — para ver o que a proposta realmente muda no ano.</p>
   </header>
 </div>
 
@@ -302,17 +326,15 @@ tbody tr:last-child td{border-bottom:0}
 <div class="wrap">
 
   <div class="tabs" role="tablist" aria-label="Cenário">
-    <button type="button" role="tab" data-tab="a" aria-selected="true"><b>Situação atual</b><span class="tv" id="tab-a">—</span></button>
-    <button type="button" role="tab" data-tab="p" aria-selected="false"><b>Proposta</b><span class="tv" id="tab-p">—</span></button>
+    <button type="button" role="tab" data-tab="a" aria-selected="false"><b id="tab-a-nome">Situação atual</b><span class="tv" id="tab-a">—</span></button>
+    <button type="button" role="tab" data-tab="p" aria-selected="true"><b id="tab-p-nome">Proposta</b><span class="tv" id="tab-p">—</span></button>
   </div>
 
   <div class="grid2" id="cenarios"></div>
 
   <div class="actions">
-    <button class="btn" id="btn-copiar" type="button">Copiar resumo</button>
     <button class="btn" id="btn-espelhar" type="button" title="Copia os valores do cenário atual para a proposta">Espelhar Atual → Proposta</button>
     <button class="btn" id="btn-reset" type="button">Restaurar exemplo</button>
-    <span class="toast" id="toast"></span>
   </div>
 
   <section id="resultado">
@@ -320,6 +342,19 @@ tbody tr:last-child td{border-bottom:0}
     <div class="card stats" id="stats"></div>
     <div class="card comp" id="comp"></div>
     <div class="card delta" id="delta"></div>
+  </section>
+
+  <section id="sec-resumo">
+    <div class="sec-head"><h2>Resumo</h2></div>
+    <div class="card resumo">
+      <div id="resumo-txt"></div>
+      <label class="nota-lab" for="anotacoes">Suas anotações — o que os números não dizem</label>
+      <textarea id="anotacoes" placeholder="Gestor, cargo, aprendizado, estabilidade, jornada, o custo de recomeçar…"></textarea>
+      <div class="actions">
+        <button class="btn" id="btn-copiar" type="button">Copiar resumo</button>
+        <span class="toast" id="toast"></span>
+      </div>
+    </div>
   </section>
 
   <details class="sec" id="sec-det" open>
@@ -331,9 +366,9 @@ tbody tr:last-child td{border-bottom:0}
   </details>
 
   <details class="sec" id="sec-liq" open>
-    <summary><h2>Do bruto ao que sobra</h2></summary>
+    <summary><h2>Do bruto ao líquido</h2></summary>
     <div class="sec-body">
-      <p class="cap">Quanto some em INSS, IRRF, aportes e custos antes de o dinheiro ser realmente seu.</p>
+      <p class="cap">Quanto some em INSS, IRRF e aportes antes de o dinheiro cair na conta — e o que você recebe fora do contracheque.</p>
       <div class="tblwrap"><table id="tbl-liq"></table></div>
     </div>
   </details>
@@ -378,8 +413,7 @@ tbody tr:last-child td{border-bottom:0}
     <ul>
       <li><b>Remuneração total (total comp):</b> salário × 12 + 13º + 1/3 de férias + bônus + ILP no ano + aporte da empresa na previdência + benefícios + FGTS. O valor cheio do pacote, antes de imposto.</li>
       <li><b>Líquido em folha:</b> o que cai na conta no ano, com INSS e IRRF descontados mês a mês, em separado no 13º, no mês das férias e na margem sobre bônus e ILP — se o salário já passou do teto do INSS, a parcela variável só paga IRRF.</li>
-      <li><b>O que sobra:</b> o líquido menos o custo de ir ao escritório e outros custos anuais, mais o que você recebe fora do contracheque (benefícios, previdência da empresa, FGTS). É o número que compara duas propostas de verdade.</li>
-      <li><b>Custo presencial:</b> dias no escritório por mês × custo do dia (transporte, refeição, estacionamento, creche). Um pacote maior com três dias presenciais pode sobrar menos que um menor 100% remoto.</li>
+      <li><b>Líquido + benefícios:</b> o líquido em folha mais o que você recebe sem passar pelo contracheque — benefícios, previdência aportada pela empresa e FGTS. É o número que compara duas propostas de verdade.</li>
       <li><b>Previdência privada:</b> o seu aporte reduz a base do IRRF até 12% do rendimento bruto (regra do PGBL). Em plano VGBL não há dedução — deixe o seu aporte em 0 e trate-o como poupança.</li>
       <li><b>ILP:</b> só vira dinheiro se você ficar até o vesting, e o valor depende do preço da ação na data. A tributação pode ser como rendimento do trabalho ou como ganho de capital a 15%, conforme o regulamento do plano.</li>
       <li><b>O que o simulador não decide por você:</b> estabilidade da empresa, gestor, aprendizado, jornada, plano de carreira e o custo de recomeçar.</li>
@@ -443,13 +477,13 @@ function irrf(rendimento, deducoes){
 
 /* ============ componentes ============ */
 const COMPS = [
-  {k:'salario', n:'Salário (12×)',         cor:'--c1'},
-  {k:'decimo',  n:'13º + 1/3 de férias',   cor:'--c2'},
-  {k:'fgts',    n:'FGTS (8%)',             cor:'--c3'},
-  {k:'benef',   n:'Benefícios',            cor:'--c4'},
-  {k:'prev',    n:'Previdência (empresa)', cor:'--c5'},
-  {k:'bonus',   n:'Bônus anual',           cor:'--v1'},
-  {k:'ilp',     n:'ILP no ano',            cor:'--v2'}
+  {k:'salario', n:'Salário (12×)',         curto:'salário',      cor:'--c1'},
+  {k:'decimo',  n:'13º + 1/3 de férias',   curto:'13º e férias', cor:'--c2'},
+  {k:'fgts',    n:'FGTS (8%)',             curto:'FGTS',         cor:'--c3'},
+  {k:'benef',   n:'Benefícios',            curto:'benefícios',   cor:'--c4'},
+  {k:'prev',    n:'Previdência (empresa)', curto:'previdência',  cor:'--c5'},
+  {k:'bonus',   n:'Bônus anual',           curto:'bônus',        cor:'--v1'},
+  {k:'ilp',     n:'ILP no ano',            curto:'ILP',          cor:'--v2'}
 ];
 
 /* ============ cálculo ============ */
@@ -501,19 +535,17 @@ function calcular(s){
   const descTot = s.descontos*12;
   const liquido = brutoFolha - inssTot - irTot - prevTot - descTot;
 
-  const custoPres = Math.max(0, s.diasPres) * Math.max(0, s.custoDia) * 12;
-  const custoOut  = Math.max(0, s.custosAno);
-  const sobra = liquido - custoPres - custoOut + g.benef + g.prev + g.fgts;
+  const total = liquido + g.benef + g.prev + g.fgts;
 
   return {
     g, totalComp, brutoFolha, variavel,
     pctVariavel: totalComp>0 ? variavel/totalComp*100 : 0,
     inss:inssTot, ir:irTot, prevFunc:prevTot, desc:descTot,
-    liquido, custoPres, custoOut, sobra,
+    liquido, total,
     aliqEfetiva: brutoFolha>0 ? (inssTot+irTot)/brutoFolha*100 : 0,
     benefM, prevEmpM, prevFuncM, bonusBruto, ilpBruto,
     bonusPctSal: sal>0 ? bonusBruto/(sal*12)*100 : 0,
-    sobraMes: sobra/12
+    totalMes: total/12
   };
 }
 
@@ -522,12 +554,12 @@ const SEED = {
   a:{ salario:14000, bonus:32000, bonusModo:'rs', bonusAting:100,
       ilp:10000, ilpModo:'ano', ilpAnos:4, ilpTrib:'salario',
       prevEmp:0, prevEmpModo:'rs', prevFunc:0, prevFuncModo:'rs',
-      descontos:0, diasPres:0, custoDia:0, custosAno:0,
+      descontos:0,
       beneficios:[{l:'Benefícios (VR/VA, saúde, odonto…)', v:1900}] },
   p:{ salario:17000, bonus:51000, bonusModo:'rs', bonusAting:100,
       ilp:0, ilpModo:'ano', ilpAnos:4, ilpTrib:'salario',
       prevEmp:510, prevEmpModo:'rs', prevFunc:0, prevFuncModo:'rs',
-      descontos:0, diasPres:0, custoDia:0, custosAno:0,
+      descontos:0,
       beneficios:[{l:'Benefícios (VR/VA, saúde, odonto…)', v:1200}] }
 };
 
@@ -546,8 +578,12 @@ const grupo = t => '<div class="group-t"><span>'+t+'</span></div>';
 const sub = id => '<div class="sub" id="'+id+'"></div>';
 
 function cardHTML(p, titulo, tag, cls){
-  return '<article class="card '+cls+'">'
-  + '<header><h3>'+titulo+'</h3><span class="tag">'+tag+'</span></header><div class="body">'
+  return '<details class="card scn '+cls+'" id="scn-'+p+'" open>'
+  + '<summary><span class="tt"><span class="tag">'+tag+'</span><h3 id="'+p+'-titulo">'+titulo+'</h3></span>'
+  + '<b class="stot num" id="'+p+'-stot">—</b></summary><div class="body">'
+
+  + '<div class="field"><label for="'+p+'-nome">Empresa</label>'
+  + '<input class="txt" type="text" id="'+p+'-nome" maxlength="40" placeholder="'+titulo+'" autocomplete="organization"></div>'
 
   + grupo('Salário')
   + campo({id:p+'-salario', label:'Salário mensal bruto', pre:'R$', money:true})
@@ -578,16 +614,12 @@ function cardHTML(p, titulo, tag, cls){
   + campo({id:p+'-descontos', label:'Descontos em folha', hint:'coparticipação, vale-transporte, mensalidade do plano', pre:'−R$', money:true})
   + '</details>'
 
-  + grupo('Custo de trabalhar aí')
-  + campo({id:p+'-diasPres', label:'Dias no escritório', suf:'dias/mês'})
-  + campo({id:p+'-custoDia', label:'Custo do dia presencial', hint:'transporte, refeição, estacionamento, creche', pre:'R$', money:true})
-  + campo({id:p+'-custosAno', label:'Outros custos no ano', hint:'mudança, cursos, equipamento, plano fora da empresa', pre:'R$', money:true})
-  + sub(p+'-sub-custo')
-
-  + '</div></article>';
+  + '</div></details>';
 }
 
 $('#cenarios').innerHTML = cardHTML('a','Situação atual','Hoje','scn-atual') + cardHTML('p','Proposta recebida','Oferta','scn-prop');
+const NOMES = {a:'Atual', p:'Proposta'};
+const nomeDe = p => ($('#'+p+'-nome').value || '').trim();
 
 // o campo de tributação do ILP é um select, não um número
 ['a','p'].forEach(p => {
@@ -663,7 +695,7 @@ function lerCFG(){
 }
 
 /* ============ leitura e escrita ============ */
-const CAMPOS = ['salario','bonus','bonusAting','ilp','ilpAnos','prevEmp','prevFunc','descontos','diasPres','custoDia','custosAno'];
+const CAMPOS = ['salario','bonus','bonusAting','ilp','ilpAnos','prevEmp','prevFunc','descontos'];
 const MODOS  = ['bonus','ilp','prevEmp','prevFunc'];
 
 function lerCenario(p){
@@ -671,6 +703,7 @@ function lerCenario(p){
   CAMPOS.forEach(k => s[k] = num($('#'+p+'-'+k).value));
   MODOS.forEach(k => s[k+'Modo'] = $('#'+p+'-'+k+'Modo').value);
   s.ilpTrib = $('#'+p+'-ilpTrib').value;
+  s.nome = nomeDe(p);
   s.beneficios = Array.from(document.querySelectorAll('#'+p+'-ben .ben-row'))
     .map(r => ({l:$('.lbl',r).value, v:num($('.val',r).value)}));
   return s;
@@ -679,6 +712,7 @@ function escreverCenario(p, s){
   CAMPOS.forEach(k => $('#'+p+'-'+k).value = fmtIn(s[k]||0));
   MODOS.forEach(k => $('#'+p+'-'+k+'Modo').value = s[k+'Modo'] || (k==='ilp' ? 'ano' : 'rs'));
   $('#'+p+'-ilpTrib').value = s.ilpTrib || 'salario';
+  $('#'+p+'-nome').value = s.nome || '';
   $('#'+p+'-ben').innerHTML = '';
   (s.beneficios||[]).forEach(b => benRow(p, b.l, b.v));
 }
@@ -707,7 +741,7 @@ function renderStats(A, P){
   $('#stats').innerHTML =
       bloco('Remuneração total', P.totalComp, P.totalComp-A.totalComp, A.totalComp)
     + bloco('Líquido em folha',  P.liquido,   P.liquido-A.liquido,     A.liquido)
-    + bloco('O que sobra',       P.sobra,     P.sobra-A.sobra,         A.sobra, true);
+    + bloco('Líquido + benefícios', P.total,  P.total-A.total,         A.total, true);
 }
 
 function renderComp(A, P){
@@ -737,7 +771,7 @@ function renderComp(A, P){
                 : ' — uma parte maior da remuneração passa a ser garantida.')
     + '</div>';
 
-  $('#comp').innerHTML = linha(A,'Situação atual') + linha(P,'Proposta recebida') + leg + nota;
+  $('#comp').innerHTML = linha(A, NOMES.a) + linha(P, NOMES.p) + leg + nota;
   $('#comp').querySelectorAll('.seg').forEach(el=>{
     el.addEventListener('mousemove', e => tipOn(e, el.dataset.t));
     el.addEventListener('mouseleave', tipOff);
@@ -769,7 +803,7 @@ function renderDelta(A, P, equilibrio, salProp){
         + '<span class="dv '+cls(total)+'">'+signed(total)+'</span></div>';
 
   const dif = equilibrio - salProp;
-  html += '<div class="risknote">Para <b>sobrar o mesmo</b> que hoje no fim do ano, o salário da proposta precisaria ser de '
+  html += '<div class="risknote">Para você <b>receber o mesmo total</b> que hoje, o salário da proposta precisaria ser de '
        + '<b>'+money2(equilibrio)+'</b> por mês, mantido o resto da oferta. '
        + (dif <= 0 ? 'A oferta está <b>'+money2(-dif)+'</b> acima desse ponto de equilíbrio.'
                    : 'Faltam <b>'+money2(dif)+'</b> por mês para chegar lá.') + '</div>';
@@ -788,7 +822,7 @@ function renderTabelas(A, P){
       + (Math.abs(d)<0.05?'—':(d>0?'+':'−')+PCT.format(Math.abs(d))+' p.p.')+'</td></tr>';
   };
 
-  let t = '<thead><tr><th>Componente (ao ano)</th><th>Atual</th><th>Proposta</th><th>Diferença</th></tr></thead><tbody>';
+  let t = '<thead><tr><th>Componente (ao ano)</th><th>'+NOMES.a+'</th><th>'+NOMES.p+'</th><th>Diferença</th></tr></thead><tbody>';
   COMPS.forEach(c => t += linha(c.n, c.cor, A.g[c.k], P.g[c.k]));
   t += linha('Remuneração total (total comp)', null, A.totalComp, P.totalComp, 'sum');
   t += pp('Parcela variável (bônus + ILP)', A.pctVariavel, P.pctVariavel, true);
@@ -799,7 +833,7 @@ function renderTabelas(A, P){
   const neg = (nome, a, p) => '<tr class="sub"><td>'+nome+'</td><td>'+mneg(a)+'</td><td>'+mneg(p)+'</td>'
     + '<td class="'+((p-a)>0.5?'down':(a-p)>0.5?'up':'')+'">'+(Math.abs(p-a)<0.5?'—':signed(-(p-a)))+'</td></tr>';
 
-  let l = '<thead><tr><th>Do bruto ao que sobra (ao ano)</th><th>Atual</th><th>Proposta</th><th>Diferença</th></tr></thead><tbody>';
+  let l = '<thead><tr><th>Do bruto ao líquido (ao ano)</th><th>'+NOMES.a+'</th><th>'+NOMES.p+'</th><th>Diferença</th></tr></thead><tbody>';
   l += linha('Bruto em folha (salário, 13º, férias, bônus, ILP)', null, A.brutoFolha, P.brutoFolha);
   l += neg('INSS', A.inss, P.inss);
   l += neg('IRRF', A.ir, P.ir);
@@ -807,19 +841,57 @@ function renderTabelas(A, P){
   l += neg('Descontos em folha', A.desc, P.desc);
   l += linha('Líquido em folha', null, A.liquido, P.liquido, 'sum');
   l += pp('Alíquota efetiva sobre a folha', A.aliqEfetiva, P.aliqEfetiva, true);
-  l += neg('Custo de ir ao escritório', A.custoPres, P.custoPres);
-  l += neg('Outros custos no ano', A.custoOut, P.custoOut);
   l += linha('+ Benefícios', '--c4', A.g.benef, P.g.benef);
   l += linha('+ Previdência aportada pela empresa', '--c5', A.g.prev, P.g.prev);
   l += linha('+ FGTS depositado', '--c3', A.g.fgts, P.g.fgts);
-  l += linha('O que sobra no ano', null, A.sobra, P.sobra, 'sum');
-  l += linha('Equivalente por mês', null, A.sobra/12, P.sobra/12);
+  l += linha('Total que entra no ano', null, A.total, P.total, 'sum');
+  l += linha('Equivalente por mês', null, A.total/12, P.total/12);
   l += '</tbody>';
   $('#tbl-liq').innerHTML = l;
 }
 
+function renderResumo(A, P, equilib, salProp){
+  const na = NOMES.a, np = NOMES.p;
+  const d = P.total - A.total;
+  const pct = A.total > 0 ? d/A.total*100 : 0;
+  const movs = COMPS.map(c => ({n:c.curto, d:P.g[c.k]-A.g[c.k]}))
+                    .filter(m => Math.abs(m.d) >= 500)
+                    .sort((a,b) => Math.abs(b.d) - Math.abs(a.d));
+  const lista = arr => arr.slice(0,3).map(m => m.n+' '+signed(m.d)).join(', ');
+  const ganhos = movs.filter(m => m.d > 0), perdas = movs.filter(m => m.d < 0);
+
+  let h = '';
+  if(Math.abs(d) < 500){
+    h += '<p class="lead">No dinheiro, <b>'+np+'</b> e <b>'+na+'</b> se equivalem — a diferença no ano não chega a R$ 500. '
+       + 'A decisão vai ser pelo resto.</p>';
+  } else {
+    h += '<p class="lead">Trocar <b>'+na+'</b> por <b>'+np+'</b> '+(d>0?'traz':'custa')+' <b>'+money(Math.abs(d))+' por ano</b> ('
+       + (d>0?'+':'−')+PCT.format(Math.abs(pct))+'%): de '+money(A.total)+' para '+money(P.total)+' entrando no ano, '
+       + 'ou '+money2(Math.abs(d)/12)+' por mês.</p>';
+  }
+  if(ganhos.length || perdas.length){
+    h += '<p>';
+    if(ganhos.length) h += 'A favor: <b>'+lista(ganhos)+'</b>. ';
+    if(perdas.length) h += 'Contra: <b>'+lista(perdas)+'</b>.';
+    h += '</p>';
+  }
+  const dv = P.pctVariavel - A.pctVariavel;
+  if(Math.abs(dv) >= 3){
+    h += '<p>' + (dv > 0
+      ? 'A parcela que depende de meta, permanência e preço da ação sobe de <b>'+PCT.format(A.pctVariavel)+'%</b> para <b>'
+        + PCT.format(P.pctVariavel)+'%</b> do pacote — são '+money(P.variavel)+' por ano que podem não vir integralmente.'
+      : 'Em compensação, o pacote fica mais garantido: a parcela variável cai de <b>'+PCT.format(A.pctVariavel)+'%</b> para <b>'
+        + PCT.format(P.pctVariavel)+'%</b>.') + '</p>';
+  }
+  const dif = equilib - salProp;
+  h += '<p>O ponto de equilíbrio é um salário de <b>'+money2(equilib)+'</b> por mês na proposta: '
+     + (dif <= 0 ? 'a oferta está '+money2(-dif)+' acima dele.'
+                 : 'a oferta está '+money2(dif)+' abaixo dele, e no dinheiro a mudança não se paga.') + '</p>';
+  $('#resumo-txt').innerHTML = h;
+}
+
 function equilibrio(sProp, alvo){
-  const val = x => calcular(Object.assign({}, sProp, {salario:x})).sobra;
+  const val = x => calcular(Object.assign({}, sProp, {salario:x})).total;
   let lo = 0, hi = Math.max(1000, sProp.salario*4 + 20000);
   if(val(hi) < alvo) return hi;
   for(let i=0;i<60;i++){ const mid = (lo+hi)/2; if(val(mid) < alvo) lo = mid; else hi = mid; }
@@ -835,6 +907,15 @@ function atualizar(){
   const A = calcular(sa), P = calcular(sp);
   ULT = {sa, sp, A, P};
 
+  NOMES.a = nomeDe('a') || 'Atual';
+  NOMES.p = nomeDe('p') || 'Proposta';
+  $('#a-titulo').textContent = nomeDe('a') || 'Situação atual';
+  $('#p-titulo').textContent = nomeDe('p') || 'Proposta recebida';
+  $('#tab-a-nome').textContent = NOMES.a;
+  $('#tab-p-nome').textContent = NOMES.p;
+  $('#a-stot').textContent = money(A.total);
+  $('#p-stot').textContent = money(P.total);
+
   [['a',sa,A],['p',sp,P]].forEach(([p,s,r])=>{
     $('#'+p+'-sub-sal').innerHTML = 'Salário bruto no ano: <b>'+money(r.g.salario + r.g.decimo)+'</b>'+(CFG.decimo?' (com 13º e férias)':'');
     $('#'+p+'-sub-bonus').innerHTML = r.bonusBruto > 0
@@ -845,27 +926,25 @@ function atualizar(){
       : 'Sem ILP neste cenário';
     $('#'+p+'-sub-prev').innerHTML = 'Empresa aporta <b>'+money2(r.prevEmpM)+'</b>/mês · você, <b>'+money2(r.prevFuncM)+'</b>/mês';
     $('#'+p+'-ben-tot').textContent = money2(r.benefM - s.descontos);
-    const custoMes = (r.custoPres + r.custoOut)/12;
-    $('#'+p+'-sub-custo').innerHTML = custoMes > 0
-      ? 'Custa <b>'+money2(custoMes)+'</b>/mês trabalhar aí — <b>'+money(r.custoPres + r.custoOut)+'</b> no ano'
-      : 'Sem custo informado';
   });
 
-  $('#tab-a').textContent = money(A.sobra)+' sobram';
-  $('#tab-p').textContent = money(P.sobra)+' sobram';
+  $('#tab-a').textContent = money(A.total)+' no ano';
+  $('#tab-p').textContent = money(P.total)+' no ano';
 
-  const d = P.sobra - A.sobra;
-  const pct = A.sobra > 0 ? d/A.sobra*100 : 0;
+  const d = P.total - A.total;
+  const pct = A.total > 0 ? d/A.total*100 : 0;
   $('#v-pill').className = 'pill ' + (d >= 0 ? 'up' : 'down');
   $('#v-pill-txt').textContent = Math.abs(d) < 500 ? 'empate técnico'
     : (d>0?'+':'−')+PCT.format(Math.abs(pct))+'% ao ano';
   $('#v-title').textContent = Math.abs(d) < 500 ? 'Os dois pacotes se equivalem'
     : (d > 0 ? money(d)+' a mais por ano' : money(-d)+' a menos por ano');
 
+  const equilib = equilibrio(sp, A.total);
   renderStats(A, P);
   renderComp(A, P);
-  renderDelta(A, P, equilibrio(sp, A.sobra), sp.salario);
+  renderDelta(A, P, equilib, sp.salario);
   renderTabelas(A, P);
+  renderResumo(A, P, equilib, sp.salario);
   salvar();
 }
 
@@ -874,7 +953,7 @@ const CHAVE = 'simulador-proposta-v3';
 function salvar(){
   try{
     localStorage.setItem(CHAVE, JSON.stringify({
-      a: lerCenario('a'), p: lerCenario('p'),
+      a: lerCenario('a'), p: lerCenario('p'), anotacoes: $('#anotacoes').value,
       cfg: {
         inss:CFG.inss,
         irrf:CFG.irrf.map(f=>({limite:isFinite(f.limite)?f.limite:null, aliq:f.aliq, ded:f.ded})),
@@ -902,23 +981,24 @@ function carregar(){
 /* ============ resumo em texto ============ */
 function resumoTexto(){
   if(!ULT) return '';
-  const {A,P,sp} = ULT, d = P.sobra - A.sobra;
+  const {A,P,sp} = ULT, d = P.total - A.total;
   const L = [], li = (n,a,p) => n.padEnd(32,' ')+money(a).padStart(14,' ')+money(p).padStart(14,' ')+signed(p-a).padStart(14,' ');
-  L.push('AVALIAÇÃO DA PROPOSTA — valores anuais');
+  const col = t => t.length > 13 ? t.slice(0,13) : t;
+  L.push(NOMES.a.toUpperCase()+' × '+NOMES.p.toUpperCase()+' — valores anuais');
   L.push(''.padEnd(74,'='));
-  L.push('Componente'.padEnd(32,' ')+'Atual'.padStart(14,' ')+'Proposta'.padStart(14,' ')+'Diferença'.padStart(14,' '));
+  L.push('Componente'.padEnd(32,' ')+col(NOMES.a).padStart(14,' ')+col(NOMES.p).padStart(14,' ')+'Diferença'.padStart(14,' '));
   COMPS.forEach(c => L.push(li(c.n, A.g[c.k], P.g[c.k])));
   L.push(''.padEnd(74,'-'));
   L.push(li('Remuneração total', A.totalComp, P.totalComp));
   L.push(li('Líquido em folha', A.liquido, P.liquido));
-  if(A.custoPres + P.custoPres + A.custoOut + P.custoOut > 0)
-    L.push(li('Custos de trabalhar aí', A.custoPres+A.custoOut, P.custoPres+P.custoOut));
-  L.push(li('O que sobra no ano', A.sobra, P.sobra));
-  L.push(li('Equivalente por mês', A.sobra/12, P.sobra/12));
+  L.push(li('Total que entra no ano', A.total, P.total));
+  L.push(li('Equivalente por mês', A.total/12, P.total/12));
   L.push('');
   L.push('Parcela variável: '+PCT.format(A.pctVariavel)+'% hoje → '+PCT.format(P.pctVariavel)+'% na proposta.');
-  L.push('Ponto de equilíbrio: salário de '+money2(equilibrio(sp, A.sobra))+'/mês na proposta.');
-  L.push(d >= 0 ? 'Conclusão: sobram '+money(d)+' a mais por ano.' : 'Conclusão: sobram '+money(-d)+' a menos por ano.');
+  L.push('Ponto de equilíbrio: salário de '+money2(equilibrio(sp, A.total))+'/mês na proposta.');
+  L.push(d >= 0 ? 'Conclusão: entram '+money(d)+' a mais por ano.' : 'Conclusão: entram '+money(-d)+' a menos por ano.');
+  const anot = $('#anotacoes').value.trim();
+  if(anot){ L.push(''); L.push('ANOTAÇÕES'); L.push(anot); }
   return L.join('\n');
 }
 function toast(msg){
@@ -947,8 +1027,14 @@ document.addEventListener('click', e => {
     document.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b === tab)));
   }
 });
+$('#anotacoes').addEventListener('input', salvar);
 $('#btn-ver').addEventListener('click', () => $('#resultado').scrollIntoView({behavior:'smooth', block:'start'}));
-$('#btn-espelhar').addEventListener('click', () => { escreverCenario('p', lerCenario('a')); atualizar(); toast('Valores copiados para a proposta.'); });
+$('#btn-espelhar').addEventListener('click', () => {
+  const base = lerCenario('a');
+  base.nome = nomeDe('p');            // o nome da empresa não se copia
+  escreverCenario('p', base);
+  atualizar(); toast('Valores copiados para a proposta.');
+});
 $('#btn-reset').addEventListener('click', () => { escreverCenario('a', SEED.a); escreverCenario('p', SEED.p); atualizar(); toast('Exemplo restaurado.'); });
 $('#btn-copiar').addEventListener('click', async () => {
   const txt = resumoTexto();
@@ -964,14 +1050,16 @@ $('#btn-copiar').addEventListener('click', async () => {
 });
 
 /* ============ início ============ */
-if(!document.body.dataset.cen) document.body.dataset.cen = 'a';
+document.body.dataset.cen = 'p';
 const salvo = carregar();
 montarTabelas();
 escreverCenario('a', (salvo && salvo.a) || SEED.a);
 escreverCenario('p', (salvo && salvo.p) || SEED.p);
-if(window.innerWidth <= 880){
-  document.querySelectorAll('details.benef, #sec-det, #sec-liq').forEach(d => d.open = false);
-}
+if(salvo && typeof salvo.anotacoes === 'string') $('#anotacoes').value = salvo.anotacoes;
+const estreito = window.innerWidth <= 880;
+// a proposta é o que se mexe; o cenário atual abre só quando precisa
+$('#scn-a').open = estreito;
+if(estreito) document.querySelectorAll('details.benef, #sec-det, #sec-liq').forEach(d => d.open = false);
 atualizar();
 
 })();
