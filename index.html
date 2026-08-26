@@ -129,6 +129,25 @@ select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(
 .group-t span{font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:600; white-space:nowrap}
 .group-t:after{content:""; height:1px; background:var(--line-2); flex:1}
 
+/* cronograma de vesting */
+details.vest{display:none}
+.card.vest-on details.vest{display:block}
+.vest-par{display:grid; grid-template-columns:1fr 1fr; gap:0 12px}
+.vest-lin{display:grid; grid-template-columns:70px 66px minmax(0,1fr) 26px; gap:8px; align-items:center; padding:3px 0}
+.vest-lin .inp input{padding:6px 2px; font-size:13px}
+.vest-lin .vv{font-size:12.5px; color:var(--muted); text-align:right; font-family:"IBM Plex Mono",monospace;
+  font-variant-numeric:tabular-nums; overflow:hidden; text-overflow:ellipsis}
+.vest-cab{display:grid; grid-template-columns:70px 66px minmax(0,1fr) 26px; gap:8px; padding:6px 0 2px}
+.vest-cab span{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:600}
+.vest-cab span:nth-child(3){text-align:right}
+.vest-res{margin-top:10px; font-size:12.5px; color:var(--ink-2); background:var(--surface-2);
+  border:1px solid var(--line-2); border-radius:8px; padding:10px 12px; line-height:1.6}
+.vest-res b{color:var(--ink); font-weight:600}
+@media (max-width:680px){
+  .vest-par{grid-template-columns:1fr}
+  .vest-lin,.vest-cab{grid-template-columns:64px 58px minmax(0,1fr) 24px; gap:6px}
+}
+
 /* benefícios recolhíveis */
 details.benef{border-top:1px solid var(--line-2); margin-top:14px}
 details.benef>summary{cursor:pointer; list-style:none; display:flex; align-items:center; gap:8px; padding:13px 0 9px;
@@ -468,6 +487,7 @@ tbody tr:last-child td{border-bottom:0}
       <li><b>Líquido + benefícios:</b> o líquido em folha mais o que você recebe sem passar pelo contracheque — benefícios, previdência aportada pela empresa e FGTS. É o número que compara duas propostas de verdade.</li>
       <li><b>Previdência privada:</b> o seu aporte reduz a base do IRRF até 12% do rendimento bruto (regra do PGBL). Em plano VGBL não há dedução — deixe o seu aporte em 0 e trate-o como poupança.</li>
       <li><b>Primeiro ano:</b> o bônus que fica para trás por sair antes do pagamento, o ILP não vestido e o bônus de contratação acontecem uma vez só — por isso ficam fora da comparação anual e aparecem num recorte à parte, com o tempo que a troca leva para se pagar. Os valores são informados em bruto e descontados na alíquota marginal de cada empresa.</li>
+      <li><b>Cronograma de vesting:</b> na unidade "vesting", o ILP anual vem de (preço esperado da ação − preço de exercício) × câmbio × ações que vencem em cada ano, contando só o que ainda está em carência. O que já venceu não entra: é ganho realizado, não renda futura. A média por ano é o total pendente dividido pelos anos com vencimento.</li>
       <li><b>ILP:</b> só vira dinheiro se você ficar até o vesting, e o valor depende do preço da ação na data. A tributação pode ser como rendimento do trabalho ou como ganho de capital a 15%, conforme o regulamento do plano.</li>
       <li><b>O que o simulador não decide por você:</b> estabilidade da empresa, gestor, aprendizado, jornada, plano de carreira e o custo de recomeçar.</li>
       <li>Estimativa para orientar a decisão — não é aconselhamento fiscal, contábil ou jurídico.</li>
@@ -484,6 +504,7 @@ const $ = (s,r) => (r||document).querySelector(s);
 const BRL  = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
 const BRL2 = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
 const PCT  = new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
+const USD  = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'USD',minimumFractionDigits:2});
 const money  = v => BRL.format(Math.round(v||0));
 const money2 = v => BRL2.format(v||0);
 const signed = v => (v>0?'+':v<0?'−':'') + BRL.format(Math.abs(Math.round(v||0)));
@@ -498,7 +519,8 @@ function num(v){
   const n = parseFloat(s);
   return isFinite(n) ? n : 0;
 }
-const fmtIn = v => (Math.round(v*100)/100).toLocaleString('pt-BR',{maximumFractionDigits:2});
+const fmtIn = (v, d) => { d = d == null ? 2 : d; const f = Math.pow(10,d);
+  return (Math.round(v*f)/f).toLocaleString('pt-BR',{maximumFractionDigits:d}); };
 
 /* ============ parâmetros fiscais ============ */
 const CFG = {
@@ -509,6 +531,15 @@ const CFG = {
   decimo:true, fgts:true,
   redOn:true, redIsen:5000, redTeto:7350, redA:978.62, redB:0.133145
 };
+
+// ganho de opções: (preço esperado − preço de exercício) × câmbio × ações que vencem no ano
+function calcVest(v){
+  const porAcao = Math.max(0, (v.preco||0) - (v.strike||0)) * (v.cambio||0);
+  const anos = (v.anos||[]).filter(x => x.q > 0);
+  const totalQ = anos.reduce((a,x) => a + x.q, 0);
+  const totalBRL = totalQ * porAcao;
+  return {porAcao, totalQ, totalBRL, anos, mediaAno: anos.length ? totalBRL/anos.length : 0};
+}
 
 const inss = base => {
   let prev = 0, t = 0;
@@ -559,7 +590,10 @@ function calcular(s){
 
   const bonusAlvo  = s.bonusModo === 'pct' ? sal*12*(s.bonus/100) : s.bonus;
   const bonusBruto = Math.max(0, bonusAlvo) * (s.bonusAting/100);
-  const ilpBruto   = s.ilpModo === 'total' ? (s.ilpAnos > 0 ? s.ilp/s.ilpAnos : 0) : s.ilp;
+  const V = calcVest(s.vest);
+  const ilpBruto = s.ilpModo === 'total' ? (s.ilpAnos > 0 ? s.ilp/s.ilpAnos : 0)
+                 : s.ilpModo === 'vest'  ? V.mediaAno
+                 : s.ilp;
 
   const marginal = extra => {
     if(extra <= 0) return {inss:0, ir:0};
@@ -597,7 +631,7 @@ function calcular(s){
     inss:inssTot, ir:irTot, prevFunc:prevTot, desc:descTot,
     liquido, total,
     aliqEfetiva: brutoFolha>0 ? (inssTot+irTot)/brutoFolha*100 : 0,
-    liqExtra, benefM, prevEmpM, prevFuncM, bonusBruto, ilpBruto,
+    V, liqExtra, benefM, prevEmpM, prevFuncM, bonusBruto, ilpBruto,
     bonusPctSal: sal>0 ? bonusBruto/(sal*12)*100 : 0,
     totalMes: total/12
   };
@@ -606,12 +640,15 @@ function calcular(s){
 /* ============ sementes ============ */
 const SEED = {
   a:{ salario:14000, bonus:32000, bonusModo:'rs', bonusAting:100,
-      ilp:10000, ilpModo:'ano', ilpAnos:4, ilpTrib:'salario',
+      ilp:0, ilpModo:'vest', ilpAnos:4, ilpTrib:'cap',
+      vest:{ strike:204.06, preco:408.13, cambio:5.149,
+             anos:[{a:2026,q:21},{a:2027,q:24},{a:2028,q:24},{a:2029,q:12}] },
       prevEmp:0, prevEmpModo:'rs', prevFunc:0, prevFuncModo:'rs',
       descontos:0,
       beneficios:[{l:'Benefícios (VR/VA, saúde, odonto…)', v:1900}] },
   p:{ salario:17000, bonus:51000, bonusModo:'rs', bonusAting:100,
       ilp:0, ilpModo:'ano', ilpAnos:4, ilpTrib:'salario',
+      vest:{ strike:0, preco:0, cambio:5.149, anos:[] },
       prevEmp:510, prevEmpModo:'rs', prevFunc:0, prevFuncModo:'rs',
       descontos:0, perdaBonus:0, perdaIlp:0, signing:0,
       beneficios:[{l:'Benefícios (VR/VA, saúde, odonto…)', v:1200}] }
@@ -621,7 +658,7 @@ const SEED = {
 function campo(o){
   const hint = o.hint ? '<span class="hint">'+o.hint+'</span>' : '';
   let dentro = (o.pre ? '<span class="pre">'+o.pre+'</span>' : '')
-    + '<input id="'+o.id+'" inputmode="decimal"'+(o.money?' data-money':'')+'>';
+    + '<input id="'+o.id+'" inputmode="decimal"'+(o.money?' data-money':'')+(o.dec?' data-dec="'+o.dec+'"':'')+'>';
   if(o.unidades) dentro += '<select class="unit" id="'+o.id+'Modo" aria-label="Unidade">'
     + o.unidades.map(u=>'<option value="'+u[0]+'">'+u[1]+'</option>').join('') + '</select>';
   else if(o.suf) dentro += '<span class="suf">'+o.suf+'</span>';
@@ -651,10 +688,23 @@ function cardHTML(p, titulo, tag, cls){
 
   + grupo('ILP — incentivo de longo prazo')
   + campo({id:p+'-ilp', label:'Valor do ILP', hint:'ações, RSU, phantom shares, bônus plurianual', money:true,
-           unidades:[['ano','R$/ano'],['total','R$ total']]})
+           unidades:[['ano','R$/ano'],['total','R$ total'],['vest','vesting']]})
   + campo({id:p+'-ilpAnos', label:'Prazo de vesting', suf:'anos'})
   + campo({id:p+'-ilpTrib', label:'Tributação do ILP', wide:true, select:true})
   + sub(p+'-sub-ilp')
+
+  + '<details class="vest benef" id="'+p+'-vest"><summary>Cronograma de vesting<b id="'+p+'-vest-tot">—</b></summary>'
+  + '<div class="vest-par">'
+  +   campo({id:p+'-vStrike', label:'Preço de exercício', pre:'US$', money:true})
+  +   campo({id:p+'-vPreco',  label:'Preço esperado da ação', pre:'US$', money:true})
+  +   campo({id:p+'-vCambio', label:'Câmbio', hint:'reais por dólar', pre:'R$', money:true, dec:4})
+  + '</div>'
+  + '<div class="vest-cab"><span>Ano</span><span>Ações</span><span>Ganho no ano</span><span></span></div>'
+  + '<div id="'+p+'-vest-lista"></div>'
+  + '<button class="addbtn" type="button" data-addvest="'+p+'">+ adicionar ano de carência</button>'
+  + '<div class="vest-res" id="'+p+'-vest-res"></div>'
+  + (p === 'a' ? '<button class="addbtn" type="button" id="btn-usar-vest" style="border-style:solid">Usar o total pendente como ILP não vestido na proposta</button>' : '')
+  + '</details>'
 
   + grupo('Previdência privada')
   + campo({id:p+'-prevEmp', label:'Aporte da empresa', money:true, unidades:[['rs','R$/mês'],['pct','% sal.']]})
@@ -687,6 +737,20 @@ const nomeDe = p => ($('#'+p+'-nome').value || '').trim();
   f.querySelector('.inp').outerHTML =
     '<select id="'+p+'-ilpTrib"><option value="salario">Rendimento do trabalho</option><option value="cap">Ganho de capital (15%)</option></select>';
 });
+
+function vestRow(p, ano, q){
+  const row = document.createElement('div');
+  row.className = 'vest-lin';
+  row.innerHTML = '<div class="inp"><input class="va" inputmode="numeric" aria-label="Ano"></div>'
+    + '<div class="inp"><input class="vq" inputmode="numeric" aria-label="Ações"></div>'
+    + '<span class="vv">—</span>'
+    + '<button class="iconbtn" type="button" title="Remover" aria-label="Remover ano">×</button>';
+  $('.va',row).value = ano || '';
+  $('.vq',row).value = q || 0;
+  $('.iconbtn',row).addEventListener('click', () => { row.remove(); atualizar(); });
+  $('#'+p+'-vest-lista').appendChild(row);
+  return row;
+}
 
 function benRow(p, l, v){
   const row = document.createElement('div');
@@ -809,6 +873,14 @@ function lerCenario(p){
   MODOS.forEach(k => s[k+'Modo'] = $('#'+p+'-'+k+'Modo').value);
   s.ilpTrib = $('#'+p+'-ilpTrib').value;
   s.nome = nomeDe(p);
+  s.vest = {
+    strike: num($('#'+p+'-vStrike').value),
+    preco:  num($('#'+p+'-vPreco').value),
+    cambio: num($('#'+p+'-vCambio').value),
+    anos: Array.from(document.querySelectorAll('#'+p+'-vest-lista .vest-lin'))
+      .map(r => ({a: Math.round(num($('.va',r).value)), q: Math.round(num($('.vq',r).value))}))
+      .filter(o => o.a > 0)
+  };
   s.beneficios = Array.from(document.querySelectorAll('#'+p+'-ben .ben-row'))
     .map(r => ({l:$('.lbl',r).value, v:num($('.val',r).value)}));
   return s;
@@ -818,6 +890,12 @@ function escreverCenario(p, s){
   MODOS.forEach(k => $('#'+p+'-'+k+'Modo').value = s[k+'Modo'] || (k==='ilp' ? 'ano' : 'rs'));
   $('#'+p+'-ilpTrib').value = s.ilpTrib || 'salario';
   $('#'+p+'-nome').value = s.nome || '';
+  const v = s.vest || {};
+  $('#'+p+'-vStrike').value = fmtIn(v.strike || 0);
+  $('#'+p+'-vPreco').value  = fmtIn(v.preco || 0);
+  $('#'+p+'-vCambio').value = fmtIn(v.cambio || 0, 4);
+  $('#'+p+'-vest-lista').innerHTML = '';
+  (v.anos || []).forEach(o => vestRow(p, o.a, o.q));
   $('#'+p+'-ben').innerHTML = '';
   (s.beneficios||[]).forEach(b => benRow(p, b.l, b.v));
 }
@@ -1079,9 +1157,27 @@ function atualizar(){
     $('#'+p+'-sub-bonus').innerHTML = r.bonusBruto > 0
       ? 'Bônus esperado: <b>'+money(r.bonusBruto)+'</b>/ano · <b>'+PCT.format(r.bonusPctSal)+'%</b> do salário anual'
       : 'Sem bônus neste cenário';
-    $('#'+p+'-sub-ilp').innerHTML = r.ilpBruto > 0
-      ? '<b>'+money(r.ilpBruto)+'</b>/ano' + (s.ilpAnos > 0 ? ' · <b>'+money(r.ilpBruto*s.ilpAnos)+'</b> ao longo de '+fmtIn(s.ilpAnos)+' ano(s) de vesting' : '')
-      : 'Sem ILP neste cenário';
+    // cronograma de vesting
+    const card = $('#scn-'+p);
+    card.classList.toggle('vest-on', s.ilpModo === 'vest');
+    const inpIlp = $('#'+p+'-ilp');
+    inpIlp.readOnly = s.ilpModo === 'vest';
+    if(s.ilpModo === 'vest') inpIlp.value = fmtIn(Math.round(r.V.mediaAno));
+    $('#'+p+'-vest-tot').textContent = r.V.totalQ > 0 ? money(r.V.totalBRL) : '—';
+    Array.from(document.querySelectorAll('#'+p+'-vest-lista .vest-lin')).forEach(row => {
+      const q = Math.round(num($('.vq',row).value));
+      $('.vv',row).textContent = q > 0 ? money(q * r.V.porAcao) : '—';
+    });
+    $('#'+p+'-vest-res').innerHTML = r.V.totalQ > 0
+      ? '<b>'+r.V.totalQ+' ações</b> ainda em carência · ganho de <b>'+USD.format((s.vest.preco - s.vest.strike))
+        + '</b> por ação (' + money2(r.V.porAcao) + ')<br>Total pendente: <b>'+money(r.V.totalBRL)
+        + '</b> · média de <b>'+money(r.V.mediaAno)+'</b> por ano nos '+r.V.anos.length+' anos com vencimento'
+      : 'Informe o preço de exercício, o preço esperado da ação e quantas ações vencem em cada ano.';
+
+    $('#'+p+'-sub-ilp').innerHTML = r.ilpBruto <= 0 ? 'Sem ILP neste cenário'
+      : s.ilpModo === 'vest'
+        ? '<b>'+money(r.ilpBruto)+'</b>/ano, calculado pelo cronograma abaixo'
+        : '<b>'+money(r.ilpBruto)+'</b>/ano' + (s.ilpAnos > 0 ? ' · <b>'+money(r.ilpBruto*s.ilpAnos)+'</b> ao longo de '+fmtIn(s.ilpAnos)+' ano(s) de vesting' : '');
     $('#'+p+'-sub-prev').innerHTML = 'Empresa aporta <b>'+money2(r.prevEmpM)+'</b>/mês · você, <b>'+money2(r.prevFuncM)+'</b>/mês';
     $('#'+p+'-ben-tot').textContent = money2(r.benefM - s.descontos);
   });
@@ -1187,7 +1283,8 @@ document.addEventListener('input',  e => { if(e.target.closest('#cenarios, #sec-
 document.addEventListener('change', e => { if(e.target.closest('#cenarios, #sec-params')) atualizar(); });
 document.addEventListener('blur', e => {
   const el = e.target;
-  if(el && el.tagName === 'INPUT' && el.hasAttribute('data-money')) el.value = fmtIn(num(el.value));
+  if(el && el.tagName === 'INPUT' && el.hasAttribute('data-money'))
+    el.value = fmtIn(num(el.value), el.dataset.dec ? +el.dataset.dec : 2);
 }, true);
 document.addEventListener('click', e => {
   const add = e.target.closest('[data-add]');
@@ -1195,6 +1292,23 @@ document.addEventListener('click', e => {
     const row = benRow(add.dataset.add, 'Novo benefício', 0);
     $('.lbl',row).focus(); $('.lbl',row).select();
     atualizar();
+    return;
+  }
+  const addv = e.target.closest('[data-addvest]');
+  if(addv){
+    const p2 = addv.dataset.addvest;
+    const ultimo = document.querySelector('#'+p2+'-vest-lista .vest-lin:last-child .va');
+    const prox = ultimo ? Math.round(num(ultimo.value)) + 1 : new Date().getFullYear();
+    const row = vestRow(p2, prox, 0);
+    $('.vq',row).focus(); $('.vq',row).select();
+    atualizar();
+    return;
+  }
+  if(e.target.closest('#btn-usar-vest')){
+    const v = calcVest(lerCenario('a').vest);
+    $('#p-perdaIlp').value = fmtIn(Math.round(v.totalBRL));
+    atualizar();
+    toast('ILP não vestido preenchido na proposta.');
     return;
   }
   const addpc = e.target.closest('[data-addpc]');

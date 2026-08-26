@@ -12,7 +12,8 @@ Para cada cenário — **Situação atual** e **Proposta recebida**:
 | --- | --- |
 | Salário mensal bruto | 12 salários + 13º + 1/3 de férias |
 | Bônus anual | em reais no ano ou em % do salário anual, × atingimento esperado |
-| ILP | valor por ano ou valor total do grant ÷ vesting; tributável como salário ou a 15% |
+| ILP | valor por ano, total do grant ÷ vesting, ou calculado pelo cronograma de vesting; tributável como salário ou a 15% |
+| Cronograma de vesting | preço de exercício, preço esperado da ação, câmbio e quantas ações vencem por ano — só o que ainda está em carência |
 | Previdência privada | aporte da empresa e o seu, em R$/mês ou % do salário (o seu deduz IRRF até 12%, regra do PGBL) |
 | Benefícios mensais | lista editável (VR/VA, saúde, odonto, home office, educação…) |
 | Descontos em folha | coparticipação, vale-transporte, mensalidade do plano |
