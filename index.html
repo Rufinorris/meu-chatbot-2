@@ -652,7 +652,8 @@ const SEED = {
   a:{ salario:14000, bonus:32000, bonusModo:'rs', bonusAting:100,
       ilp:0, ilpModo:'vest', ilpAnos:4, ilpTrib:'cap',
       vest:{ strike:204.06, preco:408.13, cambio:5.149, base:'restante',
-             anos:[{a:2026,q:21},{a:2027,q:24},{a:2028,q:24},{a:2029,q:12}] },
+             // o lote de 16 ações de 01/09/26 está a dias de vencer: conta como realizado
+             anos:[{a:2026,q:5},{a:2027,q:24},{a:2028,q:24},{a:2029,q:12}] },
       prevEmp:0, prevEmpModo:'rs', prevFunc:0, prevFuncModo:'rs',
       descontos:0,
       beneficios:[{l:'Benefícios (VR/VA, saúde, odonto…)', v:1900}] },
