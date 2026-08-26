@@ -487,7 +487,9 @@ tbody tr:last-child td{border-bottom:0}
       <li><b>Líquido + benefícios:</b> o líquido em folha mais o que você recebe sem passar pelo contracheque — benefícios, previdência aportada pela empresa e FGTS. É o número que compara duas propostas de verdade.</li>
       <li><b>Previdência privada:</b> o seu aporte reduz a base do IRRF até 12% do rendimento bruto (regra do PGBL). Em plano VGBL não há dedução — deixe o seu aporte em 0 e trate-o como poupança.</li>
       <li><b>Primeiro ano:</b> o bônus que fica para trás por sair antes do pagamento, o ILP não vestido e o bônus de contratação acontecem uma vez só — por isso ficam fora da comparação anual e aparecem num recorte à parte, com o tempo que a troca leva para se pagar. Os valores são informados em bruto e descontados na alíquota marginal de cada empresa.</li>
-      <li><b>Cronograma de vesting:</b> na unidade "vesting", o ILP anual vem de (preço esperado da ação − preço de exercício) × câmbio × ações que vencem em cada ano, contando só o que ainda está em carência. O que já venceu não entra: é ganho realizado, não renda futura. A média por ano é o total pendente dividido pelos anos com vencimento.</li>
+      <li><b>Cronograma de vesting:</b> na unidade "vesting", o ILP anual vem de (preço esperado da ação − preço de exercício) × câmbio × ações que vencem em cada ano, contando só o que ainda está em carência. O que já venceu não entra: é ganho realizado, não renda futura.</li>
+      <li><b>Média anual do vesting:</b> "pelo tempo que falta" divide o total pendente pelos anos que ainda restam até o fim do último vencimento — se o ano corrente já está pela metade, ele conta pela metade. "Pelos anos civis" divide pelo número de anos da tabela. A primeira é a taxa real de quem fica; a segunda achata o número quando o primeiro ano já começou.</li>
+      <li><b>O que a média não cobre:</b> se a empresa outorga um novo lote todo ano, o que está em carência hoje é só o resíduo dos lotes antigos e subestima quem fica — acrescente os anos do lote esperado para ver o efeito. E se as ações forem de empresa fechada, o ganho só existe num evento de liquidez: o desconto para isso vai no preço esperado da ação.</li>
       <li><b>ILP:</b> só vira dinheiro se você ficar até o vesting, e o valor depende do preço da ação na data. A tributação pode ser como rendimento do trabalho ou como ganho de capital a 15%, conforme o regulamento do plano.</li>
       <li><b>O que o simulador não decide por você:</b> estabilidade da empresa, gestor, aprendizado, jornada, plano de carreira e o custo de recomeçar.</li>
       <li>Estimativa para orientar a decisão — não é aconselhamento fiscal, contábil ou jurídico.</li>
@@ -538,7 +540,15 @@ function calcVest(v){
   const anos = (v.anos||[]).filter(x => x.q > 0);
   const totalQ = anos.reduce((a,x) => a + x.q, 0);
   const totalBRL = totalQ * porAcao;
-  return {porAcao, totalQ, totalBRL, anos, mediaAno: anos.length ? totalBRL/anos.length : 0};
+  // duas leituras: pelo número de anos civis com vencimento, ou pelo tempo que
+  // realmente falta até o fim do último deles — o ano corrente já está pela metade
+  const mediaCivil = anos.length ? totalBRL/anos.length : 0;
+  const hoje = new Date();
+  const ultimo = anos.length ? Math.max.apply(null, anos.map(x => x.a)) : hoje.getFullYear();
+  const restante = Math.max(0.25, (new Date(ultimo, 11, 31) - hoje) / (365.25*24*3600*1000));
+  const mediaRestante = totalBRL/restante;
+  return {porAcao, totalQ, totalBRL, anos, restante, mediaCivil, mediaRestante,
+          mediaAno: v.base === 'civil' ? mediaCivil : mediaRestante};
 }
 
 const inss = base => {
@@ -641,14 +651,14 @@ function calcular(s){
 const SEED = {
   a:{ salario:14000, bonus:32000, bonusModo:'rs', bonusAting:100,
       ilp:0, ilpModo:'vest', ilpAnos:4, ilpTrib:'cap',
-      vest:{ strike:204.06, preco:408.13, cambio:5.149,
+      vest:{ strike:204.06, preco:408.13, cambio:5.149, base:'restante',
              anos:[{a:2026,q:21},{a:2027,q:24},{a:2028,q:24},{a:2029,q:12}] },
       prevEmp:0, prevEmpModo:'rs', prevFunc:0, prevFuncModo:'rs',
       descontos:0,
       beneficios:[{l:'Benefícios (VR/VA, saúde, odonto…)', v:1900}] },
   p:{ salario:17000, bonus:51000, bonusModo:'rs', bonusAting:100,
       ilp:0, ilpModo:'ano', ilpAnos:4, ilpTrib:'salario',
-      vest:{ strike:0, preco:0, cambio:5.149, anos:[] },
+      vest:{ strike:0, preco:0, cambio:5.149, base:'restante', anos:[] },
       prevEmp:510, prevEmpModo:'rs', prevFunc:0, prevFuncModo:'rs',
       descontos:0, perdaBonus:0, perdaIlp:0, signing:0,
       beneficios:[{l:'Benefícios (VR/VA, saúde, odonto…)', v:1200}] }
@@ -699,6 +709,8 @@ function cardHTML(p, titulo, tag, cls){
   +   campo({id:p+'-vPreco',  label:'Preço esperado da ação', pre:'US$', money:true})
   +   campo({id:p+'-vCambio', label:'Câmbio', hint:'reais por dólar', pre:'R$', money:true, dec:4})
   + '</div>'
+  + '<div class="field wide"><label for="'+p+'-vBase">Média anual calculada</label>'
+  +   '<select id="'+p+'-vBase"><option value="restante">pelo tempo que falta</option><option value="civil">pelos anos civis</option></select></div>'
   + '<div class="vest-cab"><span>Ano</span><span>Ações</span><span>Ganho no ano</span><span></span></div>'
   + '<div id="'+p+'-vest-lista"></div>'
   + '<button class="addbtn" type="button" data-addvest="'+p+'">+ adicionar ano de carência</button>'
@@ -877,6 +889,7 @@ function lerCenario(p){
     strike: num($('#'+p+'-vStrike').value),
     preco:  num($('#'+p+'-vPreco').value),
     cambio: num($('#'+p+'-vCambio').value),
+    base:   $('#'+p+'-vBase').value,
     anos: Array.from(document.querySelectorAll('#'+p+'-vest-lista .vest-lin'))
       .map(r => ({a: Math.round(num($('.va',r).value)), q: Math.round(num($('.vq',r).value))}))
       .filter(o => o.a > 0)
@@ -894,6 +907,7 @@ function escreverCenario(p, s){
   $('#'+p+'-vStrike').value = fmtIn(v.strike || 0);
   $('#'+p+'-vPreco').value  = fmtIn(v.preco || 0);
   $('#'+p+'-vCambio').value = fmtIn(v.cambio || 0, 4);
+  $('#'+p+'-vBase').value = v.base === 'civil' ? 'civil' : 'restante';
   $('#'+p+'-vest-lista').innerHTML = '';
   (v.anos || []).forEach(o => vestRow(p, o.a, o.q));
   $('#'+p+'-ben').innerHTML = '';
@@ -1170,8 +1184,9 @@ function atualizar(){
     });
     $('#'+p+'-vest-res').innerHTML = r.V.totalQ > 0
       ? '<b>'+r.V.totalQ+' ações</b> ainda em carência · ganho de <b>'+USD.format((s.vest.preco - s.vest.strike))
-        + '</b> por ação (' + money2(r.V.porAcao) + ')<br>Total pendente: <b>'+money(r.V.totalBRL)
-        + '</b> · média de <b>'+money(r.V.mediaAno)+'</b> por ano nos '+r.V.anos.length+' anos com vencimento'
+        + '</b> por ação (' + money2(r.V.porAcao) + ') · total pendente <b>'+money(r.V.totalBRL)+'</b>'
+        + '<br><b>'+money(r.V.mediaRestante)+'</b>/ano pelos '+PCT.format(r.V.restante)+' anos que ainda faltam'
+        + ' · <b>'+money(r.V.mediaCivil)+'</b>/ano se dividido pelos '+r.V.anos.length+' anos civis'
       : 'Informe o preço de exercício, o preço esperado da ação e quantas ações vencem em cada ano.';
 
     $('#'+p+'-sub-ilp').innerHTML = r.ilpBruto <= 0 ? 'Sem ILP neste cenário'
