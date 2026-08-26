@@ -132,6 +132,7 @@ select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(
 /* cronograma de vesting */
 details.vest{display:none}
 .card.vest-on details.vest{display:block}
+details.avanc>summary{color:var(--ink-2)}
 .vest-par{display:grid; grid-template-columns:1fr 1fr; gap:0 12px}
 .vest-lin{display:grid; grid-template-columns:70px 66px minmax(0,1fr) 26px; gap:8px; align-items:center; padding:3px 0}
 .vest-lin .inp input{padding:6px 2px; font-size:13px}
@@ -732,55 +733,59 @@ function cardHTML(p, titulo, tag, cls){
   + '<div class="field"><label for="'+p+'-nome">Empresa</label>'
   + '<input class="txt" type="text" id="'+p+'-nome" maxlength="40" placeholder="'+titulo+'" autocomplete="organization"></div>'
 
-  + grupo('Salário')
   + campo({id:p+'-salario', label:'Salário mensal bruto', pre:'R$', money:true})
   + sub(p+'-sub-sal')
 
-  + grupo('Bônus anual')
-  + campo({id:p+'-bonus', label:'Bônus alvo', hint:'em reais no ano ou em % do salário anual', money:true,
+  + campo({id:p+'-bonus', label:'Bônus anual', hint:'no ano, ou % do salário', money:true,
            unidades:[['rs','R$/ano'],['pct','% sal.']]})
-  + campo({id:p+'-bonusAting', label:'Atingimento esperado', hint:'quanto do alvo você espera de fato receber', suf:'%'})
-  + campo({id:p+'-bonusTrib', label:'Tributação do bônus', wide:true, select:true})
   + sub(p+'-sub-bonus')
 
-  + grupo('ILP — incentivo de longo prazo')
-  + campo({id:p+'-ilp', label:'Valor do ILP', hint:'ações, RSU, phantom shares, bônus plurianual', money:true,
+  + campo({id:p+'-ilp', label:'ILP no ano', hint:'ações, RSU ou bônus plurianual', money:true,
            unidades:[['ano','R$/ano'],['total','R$ total'],['vest','vesting']]})
-  + campo({id:p+'-ilpAnos', label:'Prazo de vesting', suf:'anos'})
-  + campo({id:p+'-ilpTrib', label:'Tributação do ILP', wide:true, select:true})
   + sub(p+'-sub-ilp')
-
-  + '<details class="vest benef" id="'+p+'-vest"><summary>Cronograma de vesting<b id="'+p+'-vest-tot">—</b></summary>'
-  + '<div class="vest-par">'
-  +   campo({id:p+'-vStrike', label:'Preço de exercício', pre:'US$', money:true})
-  +   campo({id:p+'-vPreco',  label:'Preço esperado da ação', pre:'US$', money:true})
-  +   campo({id:p+'-vCambio', label:'Câmbio', hint:'reais por dólar', pre:'R$', money:true, dec:4})
-  + '</div>'
-  + '<div class="field wide"><label for="'+p+'-vBase">Média anual calculada</label>'
-  +   '<select id="'+p+'-vBase"><option value="restante">pelo tempo que falta</option><option value="civil">pelos anos civis</option></select></div>'
-  + '<div class="vest-cab"><span>Ano</span><span>Ações</span><span>Ganho no ano</span><span></span></div>'
-  + '<div id="'+p+'-vest-lista"></div>'
-  + '<button class="addbtn" type="button" data-addvest="'+p+'">+ adicionar ano de carência</button>'
-  + '<div class="vest-res" id="'+p+'-vest-res"></div>'
-  + (p === 'a' ? '<button class="addbtn" type="button" id="btn-usar-vest" style="border-style:solid">Usar o total pendente como ILP não vestido na proposta</button>' : '')
-  + '</details>'
-
-  + grupo('Previdência privada')
-  + campo({id:p+'-prevEmp', label:'Aporte da empresa', money:true, unidades:[['rs','R$/mês'],['pct','% sal.']]})
-  + campo({id:p+'-prevFunc', label:'Seu aporte', hint:'deduz a base do IRRF até 12% do bruto (PGBL)', money:true,
-           unidades:[['rs','R$/mês'],['pct','% sal.']]})
-  + sub(p+'-sub-prev')
-
-  + (p === 'p' ? (grupo('Ao trocar de empresa')
-      + campo({id:'p-perdaBonus', label:'Bônus/PLR que fica para trás', hint:'o que você deixa de receber por sair antes do pagamento, mais o que a nova empresa paga só proporcional no primeiro ano', pre:'R$', money:true})
-      + campo({id:'p-perdaIlp',   label:'ILP não vestido que fica para trás', hint:'ações ou parcelas que ainda não venceram', pre:'R$', money:true})
-      + campo({id:'p-signing',    label:'Bônus de contratação', hint:'signing bonus ou recomposição do que você perde', pre:'R$', money:true})
-      + sub('p-sub-troca')) : '')
 
   + '<details class="benef" open><summary>Benefícios mensais<b id="'+p+'-ben-tot">—</b></summary>'
   + '<div id="'+p+'-ben"></div>'
   + '<button class="addbtn" type="button" data-add="'+p+'">+ adicionar benefício</button>'
   + campo({id:p+'-descontos', label:'Descontos em folha', hint:'coparticipação, vale-transporte, mensalidade do plano', pre:'−R$', money:true})
+  + '</details>'
+
+  + '<details class="benef avanc" id="'+p+'-avanc"><summary>Avançado</summary>'
+
+  +   grupo('Bônus')
+  +   campo({id:p+'-bonusAting', label:'Atingimento esperado', hint:'quanto do alvo você espera de fato receber', suf:'%'})
+  +   campo({id:p+'-bonusTrib', label:'Tributação do bônus', wide:true, select:true})
+
+  +   grupo('ILP — incentivo de longo prazo')
+  +   campo({id:p+'-ilpAnos', label:'Prazo de vesting', suf:'anos'})
+  +   campo({id:p+'-ilpTrib', label:'Tributação do ILP', wide:true, select:true})
+  +   '<details class="vest benef" id="'+p+'-vest"><summary>Cronograma de vesting<b id="'+p+'-vest-tot">—</b></summary>'
+  +   '<div class="vest-par">'
+  +     campo({id:p+'-vStrike', label:'Preço de exercício', pre:'US$', money:true})
+  +     campo({id:p+'-vPreco',  label:'Preço esperado da ação', pre:'US$', money:true})
+  +     campo({id:p+'-vCambio', label:'Câmbio', hint:'reais por dólar', pre:'R$', money:true, dec:4})
+  +   '</div>'
+  +   '<div class="field wide"><label for="'+p+'-vBase">Média anual calculada</label>'
+  +     '<select id="'+p+'-vBase"><option value="restante">pelo tempo que falta</option><option value="civil">pelos anos civis</option></select></div>'
+  +   '<div class="vest-cab"><span>Ano</span><span>Ações</span><span>Ganho no ano</span><span></span></div>'
+  +   '<div id="'+p+'-vest-lista"></div>'
+  +   '<button class="addbtn" type="button" data-addvest="'+p+'">+ adicionar ano de carência</button>'
+  +   '<div class="vest-res" id="'+p+'-vest-res"></div>'
+  +   (p === 'a' ? '<button class="addbtn" type="button" id="btn-usar-vest" style="border-style:solid">Usar o total pendente como ILP não vestido na proposta</button>' : '')
+  +   '</details>'
+
+  +   grupo('Previdência privada')
+  +   campo({id:p+'-prevEmp', label:'Aporte da empresa', money:true, unidades:[['rs','R$/mês'],['pct','% sal.']]})
+  +   campo({id:p+'-prevFunc', label:'Seu aporte', hint:'deduz a base do IRRF até 12% do bruto (PGBL)', money:true,
+             unidades:[['rs','R$/mês'],['pct','% sal.']]})
+  +   sub(p+'-sub-prev')
+
+  +   (p === 'p' ? (grupo('Ao trocar de empresa')
+      + campo({id:'p-perdaBonus', label:'Bônus/PLR que fica para trás', hint:'o que você deixa de receber por sair antes do pagamento, mais o que a nova empresa paga só proporcional no primeiro ano', pre:'R$', money:true})
+      + campo({id:'p-perdaIlp',   label:'ILP não vestido que fica para trás', hint:'ações ou parcelas que ainda não venceram', pre:'R$', money:true})
+      + campo({id:'p-signing',    label:'Bônus de contratação', hint:'signing bonus ou recomposição do que você perde', pre:'R$', money:true})
+      + sub('p-sub-troca')) : '')
+
   + '</details>'
 
   + '</div></details>';
@@ -1255,7 +1260,7 @@ function atualizar(){
 
     $('#'+p+'-sub-ilp').innerHTML = r.ilpBruto <= 0 ? 'Sem ILP neste cenário'
       : s.ilpModo === 'vest'
-        ? '<b>'+money(r.ilpBruto)+'</b>/ano, calculado pelo cronograma abaixo'
+        ? '<b>'+money(r.ilpBruto)+'</b>/ano, pelo cronograma em Avançado'
         : '<b>'+money(r.ilpBruto)+'</b>/ano' + (s.ilpAnos > 0 ? ' · <b>'+money(r.ilpBruto*s.ilpAnos)+'</b> ao longo de '+fmtIn(s.ilpAnos)+' ano(s) de vesting' : '');
     $('#'+p+'-sub-prev').innerHTML = 'Empresa aporta <b>'+money2(r.prevEmpM)+'</b>/mês · você, <b>'+money2(r.prevFuncM)+'</b>/mês';
     $('#'+p+'-ben-tot').textContent = money2(r.benefM - s.descontos);

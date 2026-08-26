@@ -36,6 +36,10 @@ salário que a proposta precisaria ter para empatar com hoje — e um **resumo**
 texto corrido, com listas de prós e contras por empresa e um campo de observações
 para o que os números não dizem.
 
+Cada cartão mostra só o essencial — empresa, salário, bônus, ILP e benefícios.
+Atingimento, tributação, cronograma de vesting, previdência e o que fica para trás
+na saída ficam num bloco **Avançado** recolhido, sem sair da conta.
+
 A proposta é o cenário em foco: o cartão da situação atual abre recolhido, já que
 muda pouco. No celular os dois viram abas, os blocos longos ficam recolhidos e a
 barra de veredito acompanha a rolagem.
