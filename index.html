@@ -251,6 +251,23 @@ tbody tr:last-child td{border-bottom:0}
 .resumo p:last-of-type{margin-bottom:0}
 .resumo p.lead{font-size:17px; color:var(--ink); font-family:"Bricolage Grotesque",sans-serif; letter-spacing:-.01em; line-height:1.45}
 .resumo b{color:var(--ink); font-weight:600}
+.pc-grid{display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:20px; padding-top:18px; border-top:1px solid var(--line-2)}
+.pc-col h4{margin:0 0 4px; font-size:14px; font-weight:600; letter-spacing:-.01em; overflow-wrap:anywhere;
+  font-family:"Bricolage Grotesque",sans-serif}
+.pc-col .pc-cap{display:block; font-size:11.5px; color:var(--muted); margin-bottom:8px}
+.pc-row{display:grid; grid-template-columns:26px minmax(0,1fr) 26px; gap:6px; align-items:center; padding:2px 0}
+.pc-row .sig{width:26px; height:26px; padding:0; border-radius:6px; border:1px solid var(--line); background:var(--surface-2);
+  cursor:pointer; font-family:"IBM Plex Mono",monospace; font-size:14px; font-weight:600; line-height:1; display:grid; place-items:center}
+.pc-row[data-sig="+"] .sig{color:var(--pos); background:var(--pos-soft); border-color:var(--accent-line)}
+.pc-row[data-sig="-"] .sig{color:var(--neg); background:var(--neg-soft); border-color:color-mix(in srgb,var(--neg) 35%,transparent)}
+.pc-row .sig:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+.pc-row input{border:1px solid transparent; background:transparent; color:var(--ink-2); font:inherit; font-size:13.5px;
+  padding:6px 6px; border-radius:6px; width:100%; min-width:0}
+.pc-row input:hover{background:var(--surface-2)}
+.pc-row input:focus{outline:none; background:var(--surface-2); border-color:var(--accent); color:var(--ink)}
+.pc-add{display:flex; gap:6px; margin-top:8px}
+.pc-add .addbtn{margin-top:0; font-size:12px; padding:6px 4px}
+.pc-vazio{font-size:12.5px; color:var(--muted); padding:6px 0}
 .resumo .nota-lab{display:block; margin:18px 0 6px; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:600}
 .resumo textarea{width:100%; min-height:74px; resize:vertical; border:1px solid var(--line); background:var(--surface-2);
   color:var(--ink); border-radius:8px; padding:10px 12px; font:inherit; font-size:14px; line-height:1.5}
@@ -287,6 +304,7 @@ tbody tr:last-child td{border-bottom:0}
   .wrap{padding:18px 16px 56px}
   .mast-band{padding:0 16px}
   .bar-lab.dhead{flex-direction:column; align-items:flex-start; gap:2px}
+  .pc-grid{grid-template-columns:1fr; gap:20px}
   .drow{grid-template-columns:minmax(0,1fr) 104px; gap:6px 10px; padding:8px 0}
   .drow .dtrack{grid-column:1 / -1; order:3; height:14px}
   .dbar{height:12px}
@@ -348,8 +366,30 @@ tbody tr:last-child td{border-bottom:0}
     <div class="sec-head"><h2>Resumo</h2></div>
     <div class="card resumo">
       <div id="resumo-txt"></div>
-      <label class="nota-lab" for="anotacoes">Suas anotações — o que os números não dizem</label>
-      <textarea id="anotacoes" placeholder="Gestor, cargo, aprendizado, estabilidade, jornada, o custo de recomeçar…"></textarea>
+
+      <div class="pc-grid">
+        <div class="pc-col">
+          <h4 id="pc-a-nome">Situação atual</h4>
+          <span class="pc-cap">o que pesa a favor e contra ficar</span>
+          <div class="pc-list" id="pc-a"></div>
+          <div class="pc-add">
+            <button class="addbtn" type="button" data-addpc="a+">+ ponto positivo</button>
+            <button class="addbtn" type="button" data-addpc="a-">− ponto negativo</button>
+          </div>
+        </div>
+        <div class="pc-col">
+          <h4 id="pc-p-nome">Proposta recebida</h4>
+          <span class="pc-cap">o que pesa a favor e contra aceitar</span>
+          <div class="pc-list" id="pc-p"></div>
+          <div class="pc-add">
+            <button class="addbtn" type="button" data-addpc="p+">+ ponto positivo</button>
+            <button class="addbtn" type="button" data-addpc="p-">− ponto negativo</button>
+          </div>
+        </div>
+      </div>
+
+      <label class="nota-lab" for="anotacoes">Outras observações</label>
+      <textarea id="anotacoes" placeholder="Prazo para responder, contraproposta, dúvidas a levar para o RH…"></textarea>
       <div class="actions">
         <button class="btn" id="btn-copiar" type="button">Copiar resumo</button>
         <span class="toast" id="toast"></span>
@@ -641,6 +681,50 @@ function benRow(p, l, v){
   return row;
 }
 
+/* ============ prós e contras ============ */
+function pcRow(p, sig, txt){
+  const row = document.createElement('div');
+  row.className = 'pc-row';
+  row.dataset.sig = sig === '-' ? '-' : '+';
+  row.innerHTML = '<button class="sig" type="button" aria-label="Alternar entre positivo e negativo"></button>'
+    + '<input type="text" maxlength="120" placeholder="ex.: gestor, escopo, jornada, estabilidade">'
+    + '<button class="iconbtn" type="button" title="Remover" aria-label="Remover ponto">×</button>';
+  const sb = $('.sig', row);
+  const pinta = () => sb.textContent = row.dataset.sig === '-' ? '−' : '+';
+  pinta();
+  sb.addEventListener('click', () => {
+    row.dataset.sig = row.dataset.sig === '-' ? '+' : '-';
+    pinta(); salvar();
+  });
+  $('input', row).value = txt || '';
+  $('.iconbtn', row).addEventListener('click', () => { row.remove(); pcVazio(p); salvar(); });
+  $('#pc-'+p).appendChild(row);
+  pcVazio(p);
+  return row;
+}
+function pcVazio(p){
+  const lista = $('#pc-'+p);
+  const marca = $('.pc-vazio', lista);
+  const temLinha = !!$('.pc-row', lista);
+  if(temLinha && marca) marca.remove();
+  if(!temLinha && !marca){
+    const d = document.createElement('div');
+    d.className = 'pc-vazio';
+    d.textContent = 'Nada anotado ainda.';
+    lista.appendChild(d);
+  }
+}
+function lerPC(p){
+  return Array.from(document.querySelectorAll('#pc-'+p+' .pc-row'))
+    .map(r => ({s:r.dataset.sig, t:$('input',r).value.trim()}))
+    .filter(o => o.t);
+}
+function escreverPC(p, arr){
+  $('#pc-'+p).innerHTML = '';
+  (arr||[]).forEach(o => pcRow(p, o.s, o.t));
+  pcVazio(p);
+}
+
 /* ============ tabelas fiscais editáveis ============ */
 function montarTabelas(){
   const iw = $('#inss-rows'); iw.innerHTML = '';
@@ -913,6 +997,8 @@ function atualizar(){
   $('#p-titulo').textContent = nomeDe('p') || 'Proposta recebida';
   $('#tab-a-nome').textContent = NOMES.a;
   $('#tab-p-nome').textContent = NOMES.p;
+  $('#pc-a-nome').textContent = nomeDe('a') || 'Situação atual';
+  $('#pc-p-nome').textContent = nomeDe('p') || 'Proposta recebida';
   $('#a-stot').textContent = money(A.total);
   $('#p-stot').textContent = money(P.total);
 
@@ -954,6 +1040,7 @@ function salvar(){
   try{
     localStorage.setItem(CHAVE, JSON.stringify({
       a: lerCenario('a'), p: lerCenario('p'), anotacoes: $('#anotacoes').value,
+      pc: {a: lerPC('a'), p: lerPC('p')},
       cfg: {
         inss:CFG.inss,
         irrf:CFG.irrf.map(f=>({limite:isFinite(f.limite)?f.limite:null, aliq:f.aliq, ded:f.ded})),
@@ -997,8 +1084,15 @@ function resumoTexto(){
   L.push('Parcela variável: '+PCT.format(A.pctVariavel)+'% hoje → '+PCT.format(P.pctVariavel)+'% na proposta.');
   L.push('Ponto de equilíbrio: salário de '+money2(equilibrio(sp, A.total))+'/mês na proposta.');
   L.push(d >= 0 ? 'Conclusão: entram '+money(d)+' a mais por ano.' : 'Conclusão: entram '+money(-d)+' a menos por ano.');
+  ['a','p'].forEach(k => {
+    const itens = lerPC(k);
+    if(!itens.length) return;
+    L.push('');
+    L.push(NOMES[k].toUpperCase());
+    itens.forEach(o => L.push('  ' + (o.s === '-' ? '−' : '+') + ' ' + o.t));
+  });
   const anot = $('#anotacoes').value.trim();
-  if(anot){ L.push(''); L.push('ANOTAÇÕES'); L.push(anot); }
+  if(anot){ L.push(''); L.push('OBSERVAÇÕES'); L.push(anot); }
   return L.join('\n');
 }
 function toast(msg){
@@ -1021,13 +1115,21 @@ document.addEventListener('click', e => {
     atualizar();
     return;
   }
+  const addpc = e.target.closest('[data-addpc]');
+  if(addpc){
+    const v = addpc.dataset.addpc;
+    const row = pcRow(v.slice(0,1), v.slice(1), '');
+    $('input', row).focus();
+    salvar();
+    return;
+  }
   const tab = e.target.closest('[data-tab]');
   if(tab){
     document.body.dataset.cen = tab.dataset.tab;
     document.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b === tab)));
   }
 });
-$('#anotacoes').addEventListener('input', salvar);
+document.addEventListener('input', e => { if(e.target.closest('#sec-resumo')) salvar(); });
 $('#btn-ver').addEventListener('click', () => $('#resultado').scrollIntoView({behavior:'smooth', block:'start'}));
 $('#btn-espelhar').addEventListener('click', () => {
   const base = lerCenario('a');
@@ -1056,6 +1158,8 @@ montarTabelas();
 escreverCenario('a', (salvo && salvo.a) || SEED.a);
 escreverCenario('p', (salvo && salvo.p) || SEED.p);
 if(salvo && typeof salvo.anotacoes === 'string') $('#anotacoes').value = salvo.anotacoes;
+escreverPC('a', salvo && salvo.pc && salvo.pc.a);
+escreverPC('p', salvo && salvo.pc && salvo.pc.p);
 const estreito = window.innerWidth <= 880;
 // a proposta é o que se mexe; o cenário atual abre só quando precisa
 $('#scn-a').open = estreito;

@@ -27,7 +27,8 @@ E devolve três números anuais:
 Além disso: composição do pacote separando o que é garantido do que é variável,
 diferença componente a componente, alíquota efetiva, o **ponto de equilíbrio** — o
 salário que a proposta precisaria ter para empatar com hoje — e um **resumo** em
-texto corrido, com um campo de anotações para o que os números não dizem.
+texto corrido, com listas de prós e contras por empresa e um campo de observações
+para o que os números não dizem.
 
 A proposta é o cenário em foco: o cartão da situação atual abre recolhido, já que
 muda pouco. No celular os dois viram abas, os blocos longos ficam recolhidos e a
