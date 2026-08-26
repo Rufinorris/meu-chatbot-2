@@ -17,12 +17,17 @@ Para cada cenário — **Situação atual** e **Proposta recebida**:
 | Benefícios mensais | lista editável (VR/VA, saúde, odonto, home office, educação…) |
 | Descontos em folha | coparticipação, vale-transporte, mensalidade do plano |
 | Empresa | nome que aparece nos gráficos, nas tabelas e no resumo |
+| Ao trocar de empresa | bônus/PLR que fica para trás, ILP não vestido e bônus de contratação (só na proposta) |
 
 E devolve três números anuais:
 
 - **Remuneração total (total comp)** — salário + 13º/férias + bônus + ILP + previdência da empresa + benefícios + FGTS.
 - **Líquido em folha** — o que cai na conta no ano, com INSS e IRRF descontados mês a mês, no 13º, no mês das férias e na margem sobre bônus e ILP.
 - **Líquido + benefícios** — o líquido em folha mais o que não passa pelo contracheque (benefícios, previdência da empresa, FGTS). É o número que compara duas propostas de verdade.
+
+Como o que se perde na saída acontece uma vez só, ele fica fora da comparação
+anual e vira um recorte de **primeiro ano**, com o tempo que a troca leva para se
+pagar.
 
 Além disso: composição do pacote separando o que é garantido do que é variável,
 diferença componente a componente, alíquota efetiva, o **ponto de equilíbrio** — o

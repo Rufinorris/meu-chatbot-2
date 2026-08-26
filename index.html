@@ -172,6 +172,17 @@ section{margin-top:32px}
 .stats .st.key .v{color:var(--accent)}
 
 /* composição */
+.p1{display:grid; grid-template-columns:minmax(190px,240px) 1fr; gap:22px; align-items:center;
+  padding:18px; margin-bottom:18px; border-left:3px solid var(--v1)}
+.p1.off{display:none}
+.p1 .k{font-size:11px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:600; display:block}
+.p1 .v{font-size:26px; font-weight:500; letter-spacing:-.02em; display:block; margin-top:3px; line-height:1.15}
+.p1 .v.neg{color:var(--neg)}
+.p1 .d{font-size:12.5px; color:var(--ink-2); display:block; margin-top:2px}
+.p1 p{margin:0; font-size:13.5px; color:var(--ink-2); line-height:1.6}
+.p1 p b{color:var(--ink); font-weight:600}
+.p1 p + p{margin-top:8px}
+@media (max-width:680px){ .p1{grid-template-columns:1fr; gap:12px; padding:14px} .p1 .v{font-size:22px} }
 .comp{padding:18px}
 .bar-row{margin-bottom:18px}
 .bar-row:last-of-type{margin-bottom:0}
@@ -358,6 +369,7 @@ tbody tr:last-child td{border-bottom:0}
   <section id="resultado">
     <div class="sec-head"><h2>O que muda no ano</h2><p>Valores anuais da proposta, com a variação em relação a hoje.</p></div>
     <div class="card stats" id="stats"></div>
+    <div class="card p1 off" id="primeiro"></div>
     <div class="card comp" id="comp"></div>
     <div class="card delta" id="delta"></div>
   </section>
@@ -455,6 +467,7 @@ tbody tr:last-child td{border-bottom:0}
       <li><b>Líquido em folha:</b> o que cai na conta no ano, com INSS e IRRF descontados mês a mês, em separado no 13º, no mês das férias e na margem sobre bônus e ILP — se o salário já passou do teto do INSS, a parcela variável só paga IRRF.</li>
       <li><b>Líquido + benefícios:</b> o líquido em folha mais o que você recebe sem passar pelo contracheque — benefícios, previdência aportada pela empresa e FGTS. É o número que compara duas propostas de verdade.</li>
       <li><b>Previdência privada:</b> o seu aporte reduz a base do IRRF até 12% do rendimento bruto (regra do PGBL). Em plano VGBL não há dedução — deixe o seu aporte em 0 e trate-o como poupança.</li>
+      <li><b>Primeiro ano:</b> o bônus que fica para trás por sair antes do pagamento, o ILP não vestido e o bônus de contratação acontecem uma vez só — por isso ficam fora da comparação anual e aparecem num recorte à parte, com o tempo que a troca leva para se pagar. Os valores são informados em bruto e descontados na alíquota marginal de cada empresa.</li>
       <li><b>ILP:</b> só vira dinheiro se você ficar até o vesting, e o valor depende do preço da ação na data. A tributação pode ser como rendimento do trabalho ou como ganho de capital a 15%, conforme o regulamento do plano.</li>
       <li><b>O que o simulador não decide por você:</b> estabilidade da empresa, gestor, aprendizado, jornada, plano de carreira e o custo de recomeçar.</li>
       <li>Estimativa para orientar a decisão — não é aconselhamento fiscal, contábil ou jurídico.</li>
@@ -553,6 +566,7 @@ function calcular(s){
     const i2 = inss(sal+extra);
     return {inss: i2 - reg.inss, ir: irrf(sal+extra, ded(sal+extra,i2)) - reg.ir};
   };
+  const liqExtra = extra => { const m = marginal(extra); return Math.max(0, extra - m.inss - m.ir); };
   const mB = marginal(bonusBruto);
   const mI = s.ilpTrib === 'cap' ? {inss:0, ir: Math.max(0,ilpBruto)*0.15} : marginal(ilpBruto);
 
@@ -583,7 +597,7 @@ function calcular(s){
     inss:inssTot, ir:irTot, prevFunc:prevTot, desc:descTot,
     liquido, total,
     aliqEfetiva: brutoFolha>0 ? (inssTot+irTot)/brutoFolha*100 : 0,
-    benefM, prevEmpM, prevFuncM, bonusBruto, ilpBruto,
+    liqExtra, benefM, prevEmpM, prevFuncM, bonusBruto, ilpBruto,
     bonusPctSal: sal>0 ? bonusBruto/(sal*12)*100 : 0,
     totalMes: total/12
   };
@@ -599,7 +613,7 @@ const SEED = {
   p:{ salario:17000, bonus:51000, bonusModo:'rs', bonusAting:100,
       ilp:0, ilpModo:'ano', ilpAnos:4, ilpTrib:'salario',
       prevEmp:510, prevEmpModo:'rs', prevFunc:0, prevFuncModo:'rs',
-      descontos:0,
+      descontos:0, perdaBonus:0, perdaIlp:0, signing:0,
       beneficios:[{l:'Benefícios (VR/VA, saúde, odonto…)', v:1200}] }
 };
 
@@ -647,6 +661,12 @@ function cardHTML(p, titulo, tag, cls){
   + campo({id:p+'-prevFunc', label:'Seu aporte', hint:'deduz a base do IRRF até 12% do bruto (PGBL)', money:true,
            unidades:[['rs','R$/mês'],['pct','% sal.']]})
   + sub(p+'-sub-prev')
+
+  + (p === 'p' ? (grupo('Ao trocar de empresa')
+      + campo({id:'p-perdaBonus', label:'Bônus/PLR que fica para trás', hint:'o que você deixa de receber por sair antes do pagamento', pre:'R$', money:true})
+      + campo({id:'p-perdaIlp',   label:'ILP não vestido que fica para trás', hint:'ações ou parcelas que ainda não venceram', pre:'R$', money:true})
+      + campo({id:'p-signing',    label:'Bônus de contratação', hint:'signing bonus ou recomposição do que você perde', pre:'R$', money:true})
+      + sub('p-sub-troca')) : '')
 
   + '<details class="benef" open><summary>Benefícios mensais<b id="'+p+'-ben-tot">—</b></summary>'
   + '<div id="'+p+'-ben"></div>'
@@ -779,12 +799,13 @@ function lerCFG(){
 }
 
 /* ============ leitura e escrita ============ */
-const CAMPOS = ['salario','bonus','bonusAting','ilp','ilpAnos','prevEmp','prevFunc','descontos'];
+const CAMPOS = ['salario','bonus','bonusAting','ilp','ilpAnos','prevEmp','prevFunc','descontos',
+                'perdaBonus','perdaIlp','signing'];   // os três últimos só existem na proposta
 const MODOS  = ['bonus','ilp','prevEmp','prevFunc'];
 
 function lerCenario(p){
   const s = {};
-  CAMPOS.forEach(k => s[k] = num($('#'+p+'-'+k).value));
+  CAMPOS.forEach(k => { const el = $('#'+p+'-'+k); s[k] = el ? num(el.value) : 0; });
   MODOS.forEach(k => s[k+'Modo'] = $('#'+p+'-'+k+'Modo').value);
   s.ilpTrib = $('#'+p+'-ilpTrib').value;
   s.nome = nomeDe(p);
@@ -793,7 +814,7 @@ function lerCenario(p){
   return s;
 }
 function escreverCenario(p, s){
-  CAMPOS.forEach(k => $('#'+p+'-'+k).value = fmtIn(s[k]||0));
+  CAMPOS.forEach(k => { const el = $('#'+p+'-'+k); if(el) el.value = fmtIn(s[k]||0); });
   MODOS.forEach(k => $('#'+p+'-'+k+'Modo').value = s[k+'Modo'] || (k==='ilp' ? 'ano' : 'rs'));
   $('#'+p+'-ilpTrib').value = s.ilpTrib || 'salario';
   $('#'+p+'-nome').value = s.nome || '';
@@ -934,7 +955,49 @@ function renderTabelas(A, P){
   $('#tbl-liq').innerHTML = l;
 }
 
-function renderResumo(A, P, equilib, salProp){
+// o que se perde ao sair e o que a proposta repõe acontecem uma vez só,
+// então ficam fora da comparação anual e viram um recorte do primeiro ano
+function transicao(sa, sp, A, P){
+  const perdaBonus = A.liqExtra(Math.max(0, sp.perdaBonus));
+  const perdaIlp   = sa.ilpTrib === 'cap' ? Math.max(0, sp.perdaIlp)*0.85 : A.liqExtra(Math.max(0, sp.perdaIlp));
+  const ganho      = P.liqExtra(Math.max(0, sp.signing));
+  const bruto      = Math.max(0,sp.perdaBonus) + Math.max(0,sp.perdaIlp);
+  const liquido    = perdaBonus + perdaIlp - ganho;
+  const dAno       = P.total - A.total;
+  const ano1       = dAno - liquido;
+  const meses      = (dAno > 0 && liquido > 0) ? liquido/(dAno/12) : (liquido <= 0 ? 0 : Infinity);
+  return {perdaBonus, perdaIlp, ganho, bruto, liquido, dAno, ano1, meses,
+          tem: bruto > 0 || sp.signing > 0};
+}
+
+function renderPrimeiro(T){
+  const el = $('#primeiro');
+  if(!T.tem){ el.className = 'card p1 off'; el.innerHTML = ''; return; }
+  el.className = 'card p1';
+  const perdas = [];
+  if(T.perdaBonus > 0) perdas.push('<b>'+money(T.perdaBonus)+'</b> líquidos de bônus');
+  if(T.perdaIlp   > 0) perdas.push('<b>'+money(T.perdaIlp)+'</b> de ILP não vestido');
+  let txt = '';
+  if(perdas.length) txt += 'Ao sair você deixa para trás ' + perdas.join(' e ') + '. ';
+  if(T.ganho > 0) txt += 'O bônus de contratação repõe <b>'+money(T.ganho)+'</b> líquidos. ';
+  if(!txt) txt = 'Nada fica para trás na troca. ';
+
+  let seg = '';
+  if(T.meses === 0) seg = 'A recomposição cobre a perda: a troca já começa positiva.';
+  else if(!isFinite(T.meses)) seg = 'Como a proposta rende menos por ano, essa perda não se recupera com o tempo.';
+  else if(T.meses < 1) seg = 'Com a diferença anual de '+money(T.dAno)+', a troca se paga em <b>menos de um mês</b>.';
+  else if(T.meses <= 12) seg = 'Com a diferença anual de '+money(T.dAno)+', a troca se paga em <b>'
+    + PCT.format(T.meses)+' meses</b> — do primeiro ano em diante ela é lucro.';
+  else seg = 'Com a diferença anual de '+money(T.dAno)+', a troca leva <b>'+PCT.format(T.meses)
+    + ' meses</b> para se pagar.';
+
+  el.innerHTML = '<div><span class="k">Diferença no primeiro ano</span>'
+    + '<span class="v num'+(T.ano1 < 0 ? ' neg' : '')+'">'+signed(T.ano1)+'</span>'
+    + '<span class="d">contra '+signed(T.dAno)+' nos anos seguintes</span></div>'
+    + '<div><p>'+txt+'</p><p>'+seg+'</p></div>';
+}
+
+function renderResumo(A, P, equilib, salProp, T){
   const na = NOMES.a, np = NOMES.p;
   const d = P.total - A.total;
   const pct = A.total > 0 ? d/A.total*100 : 0;
@@ -966,6 +1029,15 @@ function renderResumo(A, P, equilib, salProp){
         + PCT.format(P.pctVariavel)+'%</b> do pacote — são '+money(P.variavel)+' por ano que podem não vir integralmente.'
       : 'Em compensação, o pacote fica mais garantido: a parcela variável cai de <b>'+PCT.format(A.pctVariavel)+'%</b> para <b>'
         + PCT.format(P.pctVariavel)+'%</b>.') + '</p>';
+  }
+  if(T && T.tem && Math.abs(T.liquido) >= 500){
+    h += '<p>No primeiro ano, porém, a diferença é de <b>'+signed(T.ano1)+'</b>: '
+       + (T.liquido > 0 ? 'ficam para trás '+money(T.liquido)+' líquidos na saída'
+                        : 'a recomposição soma '+money(-T.liquido)+' líquidos') + '. '
+       + (T.meses === 0 ? 'A troca já começa positiva.'
+          : !isFinite(T.meses) ? 'Essa perda não se recupera com o tempo.'
+          : T.meses < 1 ? 'A troca se paga em menos de um mês.'
+          : 'A troca se paga em cerca de '+PCT.format(T.meses)+' meses.') + '</p>';
   }
   const dif = equilib - salProp;
   h += '<p>O ponto de equilíbrio é um salário de <b>'+money2(equilib)+'</b> por mês na proposta: '
@@ -1025,12 +1097,17 @@ function atualizar(){
   $('#v-title').textContent = Math.abs(d) < 500 ? 'Os dois pacotes se equivalem'
     : (d > 0 ? money(d)+' a mais por ano' : money(-d)+' a menos por ano');
 
+  const T = transicao(sa, sp, A, P);
+  $('#p-sub-troca').innerHTML = T.tem
+    ? (T.bruto > 0 ? 'Fica para trás: <b>'+money(T.perdaBonus + T.perdaIlp)+'</b> líquidos' : 'Recomposição de <b>'+money(T.ganho)+'</b> líquidos')
+    : 'Nada fica para trás na troca';
   const equilib = equilibrio(sp, A.total);
   renderStats(A, P);
+  renderPrimeiro(T);
   renderComp(A, P);
   renderDelta(A, P, equilib, sp.salario);
   renderTabelas(A, P);
-  renderResumo(A, P, equilib, sp.salario);
+  renderResumo(A, P, equilib, sp.salario, T);
   salvar();
 }
 
@@ -1082,6 +1159,11 @@ function resumoTexto(){
   L.push(li('Equivalente por mês', A.total/12, P.total/12));
   L.push('');
   L.push('Parcela variável: '+PCT.format(A.pctVariavel)+'% hoje → '+PCT.format(P.pctVariavel)+'% na proposta.');
+  const T = transicao(ULT.sa, sp, A, P);
+  if(T.tem && Math.abs(T.liquido) >= 500){
+    L.push('Primeiro ano: '+signed(T.ano1)+' (fica para trás '+money(T.liquido)+' líquidos na saída'
+      + (isFinite(T.meses) && T.meses > 0 ? '; a troca se paga em '+PCT.format(T.meses)+' meses' : '')+').');
+  }
   L.push('Ponto de equilíbrio: salário de '+money2(equilibrio(sp, A.total))+'/mês na proposta.');
   L.push(d >= 0 ? 'Conclusão: entram '+money(d)+' a mais por ano.' : 'Conclusão: entram '+money(-d)+' a menos por ano.');
   ['a','p'].forEach(k => {
